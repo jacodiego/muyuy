@@ -1,0 +1,20 @@
+[
+    {
+        "itemId": "potion",
+        "name": "Poción",
+        "consumible": true,
+        "recoverHp": 20
+    },
+    {
+        "itemId": "superpotion",
+        "name": "Super Poción",
+        "consumible": true,
+        "recoverHp": 50
+    },
+    {
+        "itemId": "sword",
+        "name": "Espada",
+        "equipable": true,
+        "damage": 10
+    }
+]

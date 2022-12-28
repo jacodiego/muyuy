@@ -1,0 +1,22 @@
+[
+    {
+        "map": "home",
+        "dialogues": [
+            {
+                "onInit": true,
+                "texts": [
+                    "Que hermoso y radiante amanecer se puede apreciar desde las alturas del monte Rukawe...",
+                    "Hoy me siento con toda la energia para continuar mis laboras, primero dare de comer a los animales y luego trabajare en los huertos...",
+                    "Espero que sea un dia productivo, y terminar temprano para poder ir a ver el atardecer desde la cima."
+                ]
+            },
+            {
+                "character": "Leila",
+                "texts": [
+                    "Hola, como estas?",
+                    "Ya te enteraste del ultimo chisme?"
+                ]
+            }
+        ]
+    }
+]
