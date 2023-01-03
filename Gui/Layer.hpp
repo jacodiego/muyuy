@@ -10,15 +10,14 @@
 class Layer
 {
 public:
-    Layer(std::vector<int>, TileSet *, Coordinate);
+    Layer(std::vector<std::vector<int>> &, std::vector<TileSet *> &, Coordinate);
     ~Layer();
-    std::vector<Tile *> getTileMap() const;
     void render(SDL_Rect &) const;
     Tile *getTile(int) const;
+    std::vector<SDL_Rect> getColliders() const;
 
 private:
     std::vector<Tile *> tileMap;
-    std::vector<int> tileTypes;
-    TileSet *tileset;
+    std::vector<TileSet *> tilesets;
     Coordinate layerSize;
 };

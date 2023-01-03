@@ -110,7 +110,7 @@ void GameScreen::update()
 {
     Movement::hero(reg, camera, map);
     Movement::walkers(reg, map);
-    Intelligence::walkers(reg, map);
+    // Intelligence::walkers(reg, map);
     if (state == GameState::DIALOGUING && dialogue.at(countInteractions).size() != writingDialogue.size())
     {
         secondsDialogue += Timer::deltaTime();

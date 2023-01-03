@@ -22,13 +22,17 @@ void Movement::hero(entt::registry &reg, SDL_Rect &camera, Map *map)
     view.get<Position>(hero).c.x += velX;
 
     if (view.get<Position>(hero).c.x < 0 ||
-        view.get<Position>(hero).c.x + view.get<Sprite>(hero).spriteSheet->getSize().w > map->getSize().w ||
-        map->getColliders(view.get<Position>(hero).c))
+        view.get<Position>(hero).c.x + view.get<Sprite>(hero).spriteSheet->getSize().w > map->getSize().w)
         view.get<Position>(hero).c.x -= velX;
     if (view.get<Position>(hero).c.y < 0 ||
-        view.get<Position>(hero).c.y + view.get<Sprite>(hero).spriteSheet->getSize().h > map->getSize().h ||
-        map->getColliders(view.get<Position>(hero).c))
+        view.get<Position>(hero).c.y + view.get<Sprite>(hero).spriteSheet->getSize().h > map->getSize().h)
         view.get<Position>(hero).c.y -= velY;
+
+    if (map->checkCollision(SDL_Rect{view.get<Position>(hero).c.x, view.get<Position>(hero).c.y, view.get<Sprite>(hero).spriteSheet->getSize().w, view.get<Sprite>(hero).spriteSheet->getSize().h}))
+    {
+        view.get<Position>(hero).c.x -= velX;
+        view.get<Position>(hero).c.y -= velY;
+    }
 
     for (const entt::entity coll : collisionables)
     {

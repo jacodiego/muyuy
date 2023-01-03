@@ -7,60 +7,75 @@
 #include <fstream>
 #include <vector>
 #include <array>
-
-#include "rapidjson/document.h"
-
-using namespace rapidjson;
+#include <sol/sol.hpp>
 
 using namespace std;
 
-Map::Map(string n)
+Map::Map(string n) : name(n)
 {
-    name = n;
-    tileset = new TileSet("terrain");
-    ifstream map("Resources/maps/" + name + ".tmj");
+    sol::state lua;
+    lua.open_libraries(sol::lib::base);
 
-    if (map.fail())
-    {
-        printf("Unable to load map file!\n");
-    }
-    else
-    {
-        ostringstream sstream;
-        sstream << map.rdbuf();
-        const string str(sstream.str());
-        const char *data = str.c_str();
-        Document document;
-        document.Parse(data);
+    lua.script_file("Data/Maps/" + n + ".lua");
 
-        mapSize = {document["width"].GetInt(), document["height"].GetInt()};
-        tileSize = {document["tilewidth"].GetInt(), document["tileheight"].GetInt()};
-        for (Value::ConstValueIterator itr = document["layers"].Begin(); itr != document["layers"].End(); ++itr)
+    sol::table m = lua["map"];
+
+    sol::table sTilesets = lua["map"]["tilesets"];
+    sol::table sLayers = lua["map"]["layers"];
+
+    mapSize = {m["tile_cols"], m["tile_rows"]};
+    tileSize = {m["tilewidth"], m["tileheight"]};
+
+    for (int i = 0; i <= sTilesets.size(); i++)
+    {
+        sol::table ts = sTilesets[i].get<sol::table>();
+
+        lua.script_file(ts["path"].get<string>());
+
+        sol::table tileset = lua["tileset"];
+
+        std::map<int, SDL_Rect *> collitions;
+        sol::table colls = tileset["colliders"].get<sol::table>();
+
+        for (int c = 0; c <= colls.size(); c++)
         {
-            const Value &layersDoc = *itr;
-            for (Value::ConstValueIterator itr2 = layersDoc["layers"].Begin(); itr2 != layersDoc["layers"].End(); ++itr2)
-            {
-                const Value &layersDoc2 = *itr2;
-                vector<int> layerData;
-
-                for (auto &v : layersDoc2["data"].GetArray())
-                    layerData.push_back(v.GetInt());
-
-                if (layersDoc2["visible"].GetBool())
-                    layers.push_back(new Layer(layerData, tileset, Coordinate{document["width"].GetInt(), document["height"].GetInt()}));
-
-                // string str = layersDoc2["name"].GetString();
-                // if (str == "collisions")
-                //     collision = new Collision(layerData, document["tileheight"].GetInt(), document["tilewidth"].GetInt(), document["width"].GetInt(), document["height"].GetInt());
-            }
+            collitions.insert(std::make_pair(colls[c]["id"].get<int>(), new SDL_Rect(colls[c]["x"].get<int>(),
+                                                                                     colls[c]["y"].get<int>(),
+                                                                                     colls[c]["width"].get<int>(),
+                                                                                     colls[c]["height"].get<int>())));
         }
-        grid = SquareGrid(document["width"].GetInt(), document["height"].GetInt());
-        for (int i = 0; i < document["width"].GetInt(); i++)
-            for (int j = 0; j < document["height"].GetInt(); j++)
-                if (getCollidersGrid(GridLocation{i, j}))
-                    grid.addWall(GridLocation{i, j});
+
+        tilesets.push_back(new TileSet(
+            tileset["name"].get<string>(),
+            tileset["image"].get<string>(),
+            tileset["columns"].get<int>(),
+            tileset["rows"].get<int>(),
+            tileset["tilewidth"].get<int>(),
+            tileset["tileheight"].get<int>(),
+            ts["firstId"].get<int>(),
+            collitions));
+    }
+
+    for (int l = 0; l <= sLayers.size(); l++)
+    {
+        vector<vector<int>> map;
+        sol::table lay = sLayers[l].get<sol::table>();
+
+        for (int t = 0; t <= lay.size(); t++)
+        {
+            vector<int> row = lay[t].get<vector<int>>();
+            map.push_back(row);
+        }
+
+        layers.push_back(new Layer(map, tilesets, Coordinate{m["tile_cols"], m["tile_rows"]}));
     }
 }
+
+//         grid = SquareGrid(document["width"].GetInt(), document["height"].GetInt());
+//         for (int i = 0; i < document["width"].GetInt(); i++)
+//             for (int j = 0; j < document["height"].GetInt(); j++)
+//                 if (getCollidersGrid(GridLocation{i, j}))
+//                     grid.addWall(GridLocation{i, j});
 
 Map::~Map()
 {
@@ -69,7 +84,11 @@ Map::~Map()
         delete l;
     }
     layers.clear();
-    delete tileset;
+    for (auto ts : tilesets)
+    {
+        delete ts;
+    }
+    tilesets.clear();
 }
 
 vector<Layer *> Map::getLayers() const
@@ -79,7 +98,6 @@ vector<Layer *> Map::getLayers() const
 
 void Map::render(SDL_Rect &camera) const
 {
-
     for (int i = 0; i < layers.size(); i++)
     {
         layers[i]->render(camera);
@@ -96,16 +114,19 @@ std::string Map::getName() const
     return name;
 }
 
-bool Map::getColliders(Coordinate c) const
+bool Map::checkCollision(SDL_Rect player) const
 {
     bool coll = false;
 
     for (auto layer : layers)
     {
-        if (layer->getTile(c.x / tileset->getSize().w + (c.y / tileset->getSize().h) * mapSize.w)->getCollitionBox() != NULL)
+        for (SDL_Rect collider : layer->getColliders())
         {
-            coll = true;
-            break;
+            if (Util::checkCollision(player, collider))
+            {
+                coll = true;
+                break;
+            }
         }
     }
     return coll;

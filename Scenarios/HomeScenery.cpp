@@ -1,6 +1,6 @@
 #include "HomeScenery.hpp"
 #include <iostream>
 
-HomeScenery::HomeScenery() : GameScreen("home")
+HomeScenery::HomeScenery() : GameScreen("Home")
 {
 }
