@@ -6,7 +6,7 @@ function initialize(boot_instance)
     Boot = boot_instance;
     Script = Boot:getScriptSupervisor();
     timer = system.SystemTimer:new(7000, 0);
-    print('boot initialized from lua: ', timer);
+    --print('boot initialized from lua: ', timer);
 end
 
 function update()
@@ -21,5 +21,5 @@ function update()
         timer:finish();
     end
 
-    print('update state: ', Boot:getState());
+    --print('update state: ', Boot:getState());
 end
