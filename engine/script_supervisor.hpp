@@ -9,14 +9,12 @@
 #include "engine/video/video.hpp"
 #include "utils/singleton.hpp"
 
-namespace muyuy
+namespace muyuy::screen
 {
-
-    namespace screen
-    {
-        class GameScreen;
-    }
-
+    class GameScreen;
+}
+namespace muyuy::script
+{
     class ScriptSupervisor
     {
     public:

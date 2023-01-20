@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-namespace muyuy
+namespace muyuy::script
 {
 
     ScriptSupervisor::~ScriptSupervisor()

@@ -7,7 +7,7 @@
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 
-#include "engine/video/video.hpp"
+// #include "engine/video/video.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -147,10 +147,17 @@ namespace muyuy
 
         public:
             Device();
+            void initialize(SDL_Window *);
             bool singletonInitialize() { return true; };
+            vk::Device getDevice() { return device; };
+            vk::SurfaceKHR getSurface() { return surface; };
+            vk::CommandPool getCommandPool() { return commandPool; };
+            SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
+            QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
             // void drawFrame();
-            // void waitIdle();
+            void waitIdle();
             // void resizeScreen(int, int);
+            vk::Extent2D getWindowExtent();
             void cleanup();
 
         private:
@@ -166,8 +173,10 @@ namespace muyuy
             QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice &);
             bool checkDeviceExtensionSupport(const vk::PhysicalDevice &);
             SwapChainSupportDetails querySwapChainSupport(const vk::PhysicalDevice &);
+            void createCommandPool();
 
         private:
+            SDL_Window *window;
             vk::Instance instance;
             vk::DebugUtilsMessengerEXT debugUtilsMessenger;
             vk::SurfaceKHR surface;
@@ -177,6 +186,8 @@ namespace muyuy
 
             vk::Queue graphicsQueue;
             vk::Queue presentQueue;
+
+            vk::CommandPool commandPool;
         };
 
     }

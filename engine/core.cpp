@@ -21,7 +21,7 @@ namespace muyuy
 
         initializeEngine();
 
-        videoManager->initialize();
+        videoManager->initialize(&event);
 
         screenManager->push(new BootScreen(), false, true);
 
@@ -41,11 +41,13 @@ namespace muyuy
                 break;
             case SDL_WINDOWEVENT:
                 if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-                    // videoManager->resizeScreen(event.window.data1, event.window.data2);
-                    break;
+                    videoManager->resize(event.window.data1, event.window.data2);
+                break;
             default:
                 break;
             }
+
+            videoManager->swapBuffer();
         }
         // videoManager->waitIdle();
         videoManager->destroy();

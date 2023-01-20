@@ -1,6 +1,6 @@
 #OBJS specifies which files to compile as part of the project
 
-OBJS = $(wildcard main.cpp engine/*.cpp engine/*/*.cpp screens/*.cpp screens/*/*.cpp utils/*.cpp)
+OBJS = $(wildcard main.cpp engine/*.cpp engine/*/*.cpp engine/*/*.c screens/*.cpp screens/*/*.cpp utils/*.cpp)
 
 #CC specifies which compiler we're using
 CC = g++
