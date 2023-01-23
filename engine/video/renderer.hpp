@@ -2,6 +2,7 @@
 
 #include "device.hpp"
 #include "swapchain.hpp"
+#include "texture.hpp"
 
 #include "utils/file.hpp"
 
@@ -54,7 +55,9 @@ namespace muyuy::video
 
     enum class pipelineLayoutTypes
     {
-        Basic
+        Basic,
+        Image,
+        UboImage
     };
 
     enum class pipelineTypes
@@ -66,6 +69,18 @@ namespace muyuy::video
     {
         VertexSimple,
         FragmentSimple
+    };
+
+    enum class descriptorSetLayoutTypes
+    {
+        SamplerImage,
+        Ubo,
+        UboSampler
+    };
+
+    enum class descriptorSetTypes
+    {
+        Simple
     };
 
     class Device;
@@ -83,15 +98,22 @@ namespace muyuy::video
         void createPipelineLayout(pipelineLayoutTypes, vk::DescriptorSetLayout *);
         void createPipeline(pipelineTypes, vk::PipelineLayout, vk::ShaderModule, vk::ShaderModule);
         void createShaderModule(shaderModuleTypes, std::string);
+        void createDescriptorSetLayout(descriptorSetLayoutTypes, std::vector<vk::DescriptorSetLayoutBinding>);
+        void createDescriptorPool();
+        void createDescriptorSets(descriptorSetTypes, descriptorSetLayoutTypes, vk::ImageView, vk::Sampler);
 
     private:
         Device &device;
         SDL_Event *event;
         std::unique_ptr<Swapchain> swapchain;
+        Texture texture;
         std::vector<vk::CommandBuffer> commandBuffers;
         std::map<pipelineLayoutTypes, vk::PipelineLayout> pipelineLayouts;
         std::map<pipelineTypes, vk::Pipeline> pipelines;
         std::map<shaderModuleTypes, vk::ShaderModule> shaders;
+        std::map<descriptorSetLayoutTypes, vk::DescriptorSetLayout> descriptorSetLayouts;
+        vk::DescriptorPool descriptorPool;
+        std::map<descriptorSetTypes, std::vector<vk::DescriptorSet>> descriptorSets;
     };
 
 }

@@ -4,7 +4,7 @@ namespace muyuy::video
 {
 
     Renderer::Renderer(Device &device)
-        : device{device}
+        : device{device}, texture{device}
     {
     }
 
@@ -15,10 +15,33 @@ namespace muyuy::video
         recreateSwapChain();
         createCommandBuffers();
 
-        createPipelineLayout(pipelineLayoutTypes::Basic, nullptr);
+        texture.load("data/boot/logo.png");
+
+        // vk::DescriptorSetLayoutBinding uboLayoutBinding{
+        //     .binding = 0,
+        //     .descriptorType = vk::DescriptorType::eUniformBuffer,
+        //     .descriptorCount = 1,
+        //     .stageFlags = vk::ShaderStageFlagBits::eVertex,
+        //     .pImmutableSamplers = nullptr};
+
+        vk::DescriptorSetLayoutBinding samplerLayoutBinding{
+            .binding = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .pImmutableSamplers = nullptr,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment};
+
+        std::vector<vk::DescriptorSetLayoutBinding> bindings = {samplerLayoutBinding};
+
+        createDescriptorSetLayout(descriptorSetLayoutTypes::SamplerImage, bindings);
+
+        // createPipelineLayout(pipelineLayoutTypes::Basic, nullptr);
+        createPipelineLayout(pipelineLayoutTypes::Image, &descriptorSetLayouts.at(descriptorSetLayoutTypes::SamplerImage));
         createShaderModule(shaderModuleTypes::VertexSimple, "engine/video/shaders/vert.spv");
         createShaderModule(shaderModuleTypes::FragmentSimple, "engine/video/shaders/frag.spv");
-        createPipeline(pipelineTypes::Graphic, pipelineLayouts.at(pipelineLayoutTypes::Basic), shaders.at(shaderModuleTypes::VertexSimple), shaders.at(shaderModuleTypes::FragmentSimple));
+        createPipeline(pipelineTypes::Graphic, pipelineLayouts.at(pipelineLayoutTypes::Image), shaders.at(shaderModuleTypes::VertexSimple), shaders.at(shaderModuleTypes::FragmentSimple));
+
+        createDescriptorSets(descriptorSetTypes::Simple, descriptorSetLayoutTypes::SamplerImage, texture.getImageView(), texture.getSampler());
     }
 
     void Renderer::destroy()
@@ -218,5 +241,82 @@ namespace muyuy::video
             .pCode = reinterpret_cast<const uint32_t *>(shaderCode.data())};
 
         shaders.insert(std::pair<shaderModuleTypes, vk::ShaderModule>(type, device.getDevice().createShaderModule(createInfo)));
+    }
+
+    void Renderer::createDescriptorSetLayout(descriptorSetLayoutTypes type, std::vector<vk::DescriptorSetLayoutBinding> bindings)
+    {
+        vk::DescriptorSetLayoutCreateInfo layoutInfo{
+            .bindingCount = static_cast<uint32_t>(bindings.size()),
+            .pBindings = bindings.data()};
+
+        descriptorSetLayouts.insert(std::pair<descriptorSetLayoutTypes, vk::DescriptorSetLayout>(type, device.getDevice().createDescriptorSetLayout(layoutInfo)));
+    }
+
+    void Renderer::createDescriptorPool()
+    {
+        vk::DescriptorPoolSize uniformBuffer{
+            .type = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT)};
+        vk::DescriptorPoolSize combinedImageSampler{
+            .type = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT)};
+
+        std::array<vk::DescriptorPoolSize, 2> poolSizes{uniformBuffer, combinedImageSampler};
+
+        vk::DescriptorPoolCreateInfo poolInfo{
+            .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+            .pPoolSizes = poolSizes.data(),
+            .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT)};
+
+        descriptorPool = device.getDevice().createDescriptorPool(poolInfo);
+    }
+
+    void Renderer::createDescriptorSets(descriptorSetTypes type, descriptorSetLayoutTypes layoutType, vk::ImageView imageView, vk::Sampler sampler)
+    {
+        std::vector<vk::DescriptorSetLayout> layouts(Swapchain::MAX_FRAMES_IN_FLIGHT, descriptorSetLayouts.at(layoutType));
+        vk::DescriptorSetAllocateInfo allocInfo{
+            .descriptorPool = descriptorPool,
+            .descriptorSetCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT),
+            .pSetLayouts = layouts.data()};
+
+        descriptorSets.at(type).resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+
+        descriptorSets.at(type) = device.getDevice().allocateDescriptorSets(allocInfo);
+
+        for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            // VkDescriptorBufferInfo bufferInfo{};
+            // bufferInfo.buffer = uniformBuffers[i];
+            // bufferInfo.offset = 0;
+            // bufferInfo.range = sizeof(UniformBufferObject);
+
+            vk::DescriptorImageInfo imageInfo{
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+                .imageView = imageView,
+                .sampler = sampler};
+
+            vk::WriteDescriptorSet descImageSampler{
+                .dstSet = descriptorSets.at(type)[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .descriptorCount = 1,
+                .pImageInfo = &imageInfo,
+            };
+
+            std::vector<vk::WriteDescriptorSet> descriptorWrites{descImageSampler};
+
+            // descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            // descriptorWrites[0].dstSet = descriptorSets[i];
+            // descriptorWrites[0].dstBinding = 0;
+            // descriptorWrites[0].dstArrayElement = 0;
+            // descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            // descriptorWrites[0].descriptorCount = 1;
+            // descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+            device.getDevice().updateDescriptorSets(descriptorWrites, nullptr);
+
+            // vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
     }
 }

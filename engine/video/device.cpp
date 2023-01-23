@@ -305,4 +305,72 @@ namespace muyuy::video
 
         commandPool = device.createCommandPool(poolInfo);
     }
+
+    uint32_t Device::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
+    {
+        vk::PhysicalDeviceMemoryProperties memProperties = physicalDevice.getMemoryProperties();
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                return i;
+            }
+        }
+
+        throw std::runtime_error("failed to find suitable memory type!");
+    }
+
+    vk::CommandBuffer Device::beginSingleTimeCommands()
+    {
+        vk::CommandBufferAllocateInfo allocInfo{
+            .level = vk::CommandBufferLevel::ePrimary,
+            .commandPool = commandPool,
+            .commandBufferCount = 1};
+
+        vk::CommandBuffer commandBuffer = device.allocateCommandBuffers(allocInfo).front();
+
+        vk::CommandBufferBeginInfo beginInfo{
+            .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit};
+
+        commandBuffer.begin(beginInfo);
+
+        return commandBuffer;
+    }
+
+    void Device::endSingleTimeCommands(vk::CommandBuffer commandBuffer)
+    {
+        commandBuffer.end();
+
+        vk::SubmitInfo submitInfo{
+            .commandBufferCount = 1,
+            .pCommandBuffers = &commandBuffer};
+
+        graphicsQueue.submit(submitInfo);
+        graphicsQueue.waitIdle();
+        device.freeCommandBuffers(commandPool, commandBuffer);
+    }
+
+    vk::ImageView Device::createImageView(vk::Image image, vk::Format format)
+    {
+        vk::ImageViewCreateInfo viewInfo{
+            .image = image,
+            .viewType = vk::ImageViewType::e2D,
+            .format = format,
+            .subresourceRange = {
+                .aspectMask = vk::ImageAspectFlagBits::eColor,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1}};
+
+        VkImageView imageView = device.createImageView(viewInfo);
+
+        return imageView;
+    }
+
+    vk::PhysicalDeviceProperties Device::getPhysicalDeviceProperties()
+    {
+        return physicalDevice.getProperties();
+    }
+
 }

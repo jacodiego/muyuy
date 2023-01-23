@@ -7,8 +7,6 @@
 #include <SDL2/SDL.h>
 #include <glm/glm.hpp>
 
-// #include "engine/video/video.hpp"
-
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
@@ -154,10 +152,15 @@ namespace muyuy
             vk::CommandPool getCommandPool() { return commandPool; };
             SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
             QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
+            uint32_t findMemoryType(uint32_t, vk::MemoryPropertyFlags);
+            vk::CommandBuffer beginSingleTimeCommands();
+            void endSingleTimeCommands(vk::CommandBuffer);
             // void drawFrame();
             void waitIdle();
             // void resizeScreen(int, int);
             vk::Extent2D getWindowExtent();
+            vk::ImageView createImageView(vk::Image image, vk::Format format);
+            vk::PhysicalDeviceProperties getPhysicalDeviceProperties();
             void cleanup();
 
         private:

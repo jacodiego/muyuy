@@ -1,8 +1,8 @@
 #pragma once
 
-#define VULKAN_HPP_NO_CONSTRUCTORS
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#include <vulkan/vulkan.hpp>
+// #define VULKAN_HPP_NO_CONSTRUCTORS
+// #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+// #include <vulkan/vulkan.hpp>
 
 #include "device.hpp"
 
@@ -24,7 +24,6 @@ namespace muyuy::video
         void createRenderPass();
         void createFramebuffers();
         void createSyncObjects();
-        vk::ImageView createImageView(vk::Image image, vk::Format format);
         vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR> &);
         vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &);
         vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR &);

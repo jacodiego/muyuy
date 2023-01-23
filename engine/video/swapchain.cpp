@@ -108,26 +108,8 @@ namespace muyuy::video
 
         for (uint32_t i = 0; i < swapChainImages.size(); i++)
         {
-            swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat);
+            swapChainImageViews[i] = device.createImageView(swapChainImages[i], swapChainImageFormat);
         }
-    }
-
-    vk::ImageView Swapchain::createImageView(vk::Image image, vk::Format format)
-    {
-        vk::ImageViewCreateInfo viewInfo{
-            .image = image,
-            .viewType = vk::ImageViewType::e2D,
-            .format = format,
-            .subresourceRange = {
-                .aspectMask = vk::ImageAspectFlagBits::eColor,
-                .baseMipLevel = 0,
-                .levelCount = 1,
-                .baseArrayLayer = 0,
-                .layerCount = 1}};
-
-        VkImageView imageView = device.getDevice().createImageView(viewInfo);
-
-        return imageView;
     }
 
     void Swapchain::createRenderPass()
