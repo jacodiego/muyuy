@@ -150,6 +150,8 @@ namespace muyuy
             vk::Device getDevice() { return device; };
             vk::SurfaceKHR getSurface() { return surface; };
             vk::CommandPool getCommandPool() { return commandPool; };
+            vk::Queue getGraphicsQueue() { return graphicsQueue; };
+            vk::Queue getPresentQueue() { return presentQueue; };
             SwapChainSupportDetails getSwapChainSupport() { return querySwapChainSupport(physicalDevice); }
             QueueFamilyIndices findPhysicalQueueFamilies() { return findQueueFamilies(physicalDevice); }
             uint32_t findMemoryType(uint32_t, vk::MemoryPropertyFlags);

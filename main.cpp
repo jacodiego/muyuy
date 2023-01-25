@@ -8,16 +8,17 @@ int main()
 {
 
     muyuy::Core core{};
+    core.run();
 
-    try
-    {
-        core.run();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << std::endl;
-        return EXIT_FAILURE;
-    }
+    // try
+    // {
+    //     core.run();
+    // }
+    // catch (const std::exception &e)
+    // {
+    //     std::cerr << e.what() << std::endl;
+    //     return EXIT_FAILURE;
+    // }
 
     return EXIT_SUCCESS;
 }

@@ -31,7 +31,7 @@ namespace muyuy
         {
             SDL_PollEvent(&event);
 
-            // videoManager->drawFrame();
+            videoManager->draw();
             screenManager->update();
 
             switch (event.type)

@@ -11,15 +11,17 @@ namespace muyuy::video
     class Device;
     class Swapchain
     {
+        friend class Renderer;
+
     public:
         static constexpr int MAX_FRAMES_IN_FLIGHT = 2;
         Swapchain(Device &);
-        vk::Extent2D getSwapChainExtent() { return swapChainExtent; };
-        vk::RenderPass getRenderPass() { return renderPass; };
+        void initialize();
+        void cleanup();
 
     private:
-        void initialize();
         void createSwapChain();
+        void recreateSwapChain();
         void createImageViews();
         void createRenderPass();
         void createFramebuffers();

@@ -5,7 +5,6 @@ namespace muyuy::video
 
     Swapchain::Swapchain(Device &dev) : device(dev)
     {
-        initialize();
     }
 
     void Swapchain::initialize()
@@ -15,6 +14,21 @@ namespace muyuy::video
         createRenderPass();
         createFramebuffers();
         createSyncObjects();
+    }
+
+    void Swapchain::cleanup()
+    {
+        for (size_t i = 0; i < swapChainFramebuffers.size(); i++)
+        {
+            device.getDevice().destroyFramebuffer(swapChainFramebuffers[i]);
+        }
+
+        for (size_t i = 0; i < swapChainImageViews.size(); i++)
+        {
+            device.getDevice().destroyImageView(swapChainImageViews[i]);
+        }
+
+        device.getDevice().destroySwapchainKHR(oldSwapChain);
     }
 
     void Swapchain::createSwapChain()

@@ -300,7 +300,7 @@ namespace muyuy::video
         QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
 
         vk::CommandPoolCreateInfo poolInfo{
-            .flags = vk::CommandPoolCreateFlagBits(),
+            .flags = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
             .queueFamilyIndex = queueFamilyIndices.graphicsFamily.value()};
 
         commandPool = device.createCommandPool(poolInfo);
@@ -323,8 +323,8 @@ namespace muyuy::video
     vk::CommandBuffer Device::beginSingleTimeCommands()
     {
         vk::CommandBufferAllocateInfo allocInfo{
-            .level = vk::CommandBufferLevel::ePrimary,
             .commandPool = commandPool,
+            .level = vk::CommandBufferLevel::ePrimary,
             .commandBufferCount = 1};
 
         vk::CommandBuffer commandBuffer = device.allocateCommandBuffers(allocInfo).front();

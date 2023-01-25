@@ -1,6 +1,7 @@
 #pragma once
 
 #include "device.hpp"
+#include "buffer.hpp"
 
 namespace muyuy::video
 {
@@ -16,12 +17,12 @@ namespace muyuy::video
     private:
         void createImage(uint32_t, uint32_t, vk::Format, vk::ImageTiling, vk::ImageUsageFlags, vk::MemoryPropertyFlags);
         void transitionImageLayout(vk::Format, vk::ImageLayout, vk::ImageLayout);
-        void copyBufferToImage(vk::Buffer, uint32_t, uint32_t);
         void createTextureImageView();
         void createTextureSampler();
 
     private:
         Device &device;
+        Buffer buffer{device};
         vk::Image textureImage;
         vk::DeviceMemory textureImageMemory;
         vk::ImageView textureImageView;

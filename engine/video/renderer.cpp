@@ -11,36 +11,49 @@ namespace muyuy::video
     void Renderer::initialize(SDL_Event *e)
     {
         event = e;
-        swapchain = std::make_unique<Swapchain>(device);
-        recreateSwapChain();
+        swapchain.initialize();
         createCommandBuffers();
 
         texture.load("data/boot/logo.png");
 
-        // vk::DescriptorSetLayoutBinding uboLayoutBinding{
-        //     .binding = 0,
-        //     .descriptorType = vk::DescriptorType::eUniformBuffer,
-        //     .descriptorCount = 1,
-        //     .stageFlags = vk::ShaderStageFlagBits::eVertex,
-        //     .pImmutableSamplers = nullptr};
+        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        buffer.initialize(vertices.data(), bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, vertexBuffer, vertexBufferMemory);
+        buffer.copyBuffer(vertexBuffer, bufferSize);
+        buffer.destroy();
+
+        bufferSize = sizeof(indices[0]) * indices.size();
+
+        buffer.initialize(indices.data(), bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer, indexBufferMemory);
+        buffer.copyBuffer(indexBuffer, bufferSize);
+        buffer.destroy();
+
+        createUniformBuffers();
+
+        vk::DescriptorSetLayoutBinding uboLayoutBinding{
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eUniformBuffer,
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eVertex,
+            .pImmutableSamplers = nullptr};
 
         vk::DescriptorSetLayoutBinding samplerLayoutBinding{
-            .binding = 0,
-            .descriptorCount = 1,
+            .binding = 1,
             .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-            .pImmutableSamplers = nullptr,
-            .stageFlags = vk::ShaderStageFlagBits::eFragment};
+            .descriptorCount = 1,
+            .stageFlags = vk::ShaderStageFlagBits::eFragment,
+            .pImmutableSamplers = nullptr};
 
-        std::vector<vk::DescriptorSetLayoutBinding> bindings = {samplerLayoutBinding};
+        std::vector<vk::DescriptorSetLayoutBinding> bindings = {uboLayoutBinding, samplerLayoutBinding};
 
         createDescriptorSetLayout(descriptorSetLayoutTypes::SamplerImage, bindings);
 
-        // createPipelineLayout(pipelineLayoutTypes::Basic, nullptr);
         createPipelineLayout(pipelineLayoutTypes::Image, &descriptorSetLayouts.at(descriptorSetLayoutTypes::SamplerImage));
         createShaderModule(shaderModuleTypes::VertexSimple, "engine/video/shaders/vert.spv");
         createShaderModule(shaderModuleTypes::FragmentSimple, "engine/video/shaders/frag.spv");
         createPipeline(pipelineTypes::Graphic, pipelineLayouts.at(pipelineLayoutTypes::Image), shaders.at(shaderModuleTypes::VertexSimple), shaders.at(shaderModuleTypes::FragmentSimple));
-
+        createDescriptorPool();
         createDescriptorSets(descriptorSetTypes::Simple, descriptorSetLayoutTypes::SamplerImage, texture.getImageView(), texture.getSampler());
     }
 
@@ -63,6 +76,71 @@ namespace muyuy::video
         pipelineLayouts.clear();
     }
 
+    void Renderer::draw()
+    {
+
+        device.getDevice().waitForFences(swapchain.inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+
+        uint32_t imageIndex;
+        vk::Result result;
+
+        std::tie(result, imageIndex) = device.getDevice().acquireNextImageKHR(swapchain.swapChain, UINT64_MAX, swapchain.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE);
+
+        if (result == vk::Result::eErrorOutOfDateKHR)
+        {
+            recreateSwapChain();
+            return;
+        }
+        else if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+        {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        device.getDevice().resetFences(swapchain.inFlightFences[currentFrame]);
+        commandBuffers[currentFrame].reset();
+
+        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        updateUniformBuffer(currentFrame);
+
+        vk::Semaphore waitSemaphores[] = {swapchain.imageAvailableSemaphores[currentFrame]};
+        vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
+        vk::Semaphore signalSemaphores[] = {swapchain.renderFinishedSemaphores[currentFrame]};
+
+        vk::SubmitInfo submitInfo{
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = waitSemaphores,
+            .pWaitDstStageMask = waitStages,
+            .commandBufferCount = 1,
+            .pCommandBuffers = &commandBuffers[currentFrame],
+            .signalSemaphoreCount = 1,
+            .pSignalSemaphores = signalSemaphores};
+
+        device.getGraphicsQueue().submit(submitInfo, swapchain.inFlightFences[currentFrame]);
+
+        vk::SwapchainKHR swapChains[] = {swapchain.swapChain};
+
+        vk::PresentInfoKHR presentInfo{
+            .waitSemaphoreCount = 1,
+            .pWaitSemaphores = signalSemaphores,
+            .swapchainCount = 1,
+            .pSwapchains = swapChains,
+            .pImageIndices = &imageIndex};
+
+        result = device.getPresentQueue().presentKHR(&presentInfo);
+
+        if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
+        {
+            framebufferResized = false;
+            recreateSwapChain();
+        }
+        else if (result != vk::Result::eSuccess)
+        {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
+
+        currentFrame = (currentFrame + 1) % Swapchain::MAX_FRAMES_IN_FLIGHT;
+    }
+
     void Renderer::recreateSwapChain()
     {
         vk::Extent2D extent{
@@ -76,14 +154,14 @@ namespace muyuy::video
 
         device.waitIdle();
 
-        // cleanupSwapChain();
-
-        // createSwapChain();
-        // createImageViews();
-        // createRenderPass();
-        // createGraphicsPipeline();
-        // createFramebuffers();
-        // createCommandBuffers();
+        swapchain.cleanup();
+        swapchain.createSwapChain();
+        swapchain.createImageViews();
+        swapchain.createRenderPass();
+        createPipeline(pipelineTypes::Graphic, pipelineLayouts.at(pipelineLayoutTypes::Image), shaders.at(shaderModuleTypes::VertexSimple), shaders.at(shaderModuleTypes::FragmentSimple));
+        swapchain.createFramebuffers();
+        swapchain.createSwapChain();
+        createCommandBuffers();
     }
 
     void Renderer::createCommandBuffers()
@@ -99,13 +177,13 @@ namespace muyuy::video
 
     void Renderer::createPipelineLayout(pipelineLayoutTypes type, vk::DescriptorSetLayout *descriptor)
     {
-        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
-        if (descriptor != nullptr)
-        {
-            vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
-                .setLayoutCount = 1,
-                .pSetLayouts = descriptor};
-        }
+        // vk::PipelineLayoutCreateInfo pipelineLayoutInfo{};
+        // if (descriptor != nullptr)
+        // {
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo{
+            .setLayoutCount = 1,
+            .pSetLayouts = descriptor};
+        //}
 
         pipelineLayouts.insert(std::pair<pipelineLayoutTypes, vk::PipelineLayout>(type, device.getDevice().createPipelineLayout(pipelineLayoutInfo)));
     }
@@ -149,14 +227,14 @@ namespace muyuy::video
         vk::Viewport viewport{
             .x = 0.0f,
             .y = 0.0f,
-            .width = (float)swapchain->getSwapChainExtent().width,
-            .height = (float)swapchain->getSwapChainExtent().height,
+            .width = (float)swapchain.swapChainExtent.width,
+            .height = (float)swapchain.swapChainExtent.height,
             .minDepth = 0.0f,
             .maxDepth = 1.0f};
 
         vk::Rect2D scissor{
             .offset = {0, 0},
-            .extent = swapchain->getSwapChainExtent()};
+            .extent = swapchain.swapChainExtent};
 
         vk::PipelineViewportStateCreateInfo viewportState{
             .viewportCount = 1,
@@ -210,7 +288,7 @@ namespace muyuy::video
             .pColorBlendState = &colorBlending,
             .pDynamicState = &dynamicState,
             .layout = pipelineLayout,
-            .renderPass = swapchain->getRenderPass(),
+            .renderPass = swapchain.renderPass,
             .subpass = 0,
             .basePipelineHandle = VK_NULL_HANDLE,
             .basePipelineIndex = -1};
@@ -264,9 +342,9 @@ namespace muyuy::video
         std::array<vk::DescriptorPoolSize, 2> poolSizes{uniformBuffer, combinedImageSampler};
 
         vk::DescriptorPoolCreateInfo poolInfo{
+            .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT),
             .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-            .pPoolSizes = poolSizes.data(),
-            .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT)};
+            .pPoolSizes = poolSizes.data()};
 
         descriptorPool = device.getDevice().createDescriptorPool(poolInfo);
     }
@@ -279,44 +357,129 @@ namespace muyuy::video
             .descriptorSetCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT),
             .pSetLayouts = layouts.data()};
 
-        descriptorSets.at(type).resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
-
-        descriptorSets.at(type) = device.getDevice().allocateDescriptorSets(allocInfo);
+        descriptorSets.insert(std::pair<descriptorSetTypes, std::vector<vk::DescriptorSet>>(type, device.getDevice().allocateDescriptorSets(allocInfo)));
 
         for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
         {
-            // VkDescriptorBufferInfo bufferInfo{};
-            // bufferInfo.buffer = uniformBuffers[i];
-            // bufferInfo.offset = 0;
-            // bufferInfo.range = sizeof(UniformBufferObject);
+            vk::DescriptorBufferInfo bufferInfo{
+                .buffer = uniformBuffers[i],
+                .offset = 0,
+                .range = sizeof(UniformBufferObject)};
 
             vk::DescriptorImageInfo imageInfo{
-                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal,
+                .sampler = sampler,
                 .imageView = imageView,
-                .sampler = sampler};
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal};
+
+            vk::WriteDescriptorSet descUniformBuffers{
+                .dstSet = descriptorSets.at(type)[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eUniformBuffer,
+                .pBufferInfo = &bufferInfo,
+            };
 
             vk::WriteDescriptorSet descImageSampler{
                 .dstSet = descriptorSets.at(type)[i],
                 .dstBinding = 1,
                 .dstArrayElement = 0,
-                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
                 .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
                 .pImageInfo = &imageInfo,
             };
 
-            std::vector<vk::WriteDescriptorSet> descriptorWrites{descImageSampler};
-
-            // descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            // descriptorWrites[0].dstSet = descriptorSets[i];
-            // descriptorWrites[0].dstBinding = 0;
-            // descriptorWrites[0].dstArrayElement = 0;
-            // descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            // descriptorWrites[0].descriptorCount = 1;
-            // descriptorWrites[0].pBufferInfo = &bufferInfo;
+            std::vector<vk::WriteDescriptorSet> descriptorWrites{descUniformBuffers, descImageSampler};
 
             device.getDevice().updateDescriptorSets(descriptorWrites, nullptr);
+        }
+    }
 
-            // vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+    void Renderer::recordCommandBuffer(vk::CommandBuffer commandBuffer, uint32_t imageIndex)
+    {
+        vk::CommandBufferBeginInfo beginInfo{};
+
+        if (commandBuffer.begin(&beginInfo) != vk::Result::eSuccess)
+        {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        vk::ClearValue clearColor{
+            .color = {{{1.0f, 1.0f, 1.0f, 1.0f}}}};
+
+        vk::RenderPassBeginInfo renderPassInfo{
+            .renderPass = swapchain.renderPass,
+            .framebuffer = swapchain.swapChainFramebuffers[imageIndex],
+            .renderArea = {
+                .offset = {0, 0},
+                .extent = swapchain.swapChainExtent},
+            .clearValueCount = 1,
+            .pClearValues = &clearColor};
+
+        commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
+
+        vk::Viewport viewport{
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(swapchain.swapChainExtent.width),
+            .height = static_cast<float>(swapchain.swapChainExtent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f};
+
+        commandBuffer.setViewport(0, viewport);
+
+        vk::Rect2D scissor{
+            .offset = {0, 0},
+            .extent = swapchain.swapChainExtent};
+
+        commandBuffer.setScissor(0, scissor);
+
+        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.at(pipelineTypes::Graphic));
+
+        vk::Buffer vertexBuffers[] = {vertexBuffer};
+        vk::DeviceSize offsets[] = {0};
+
+        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+
+        commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint16);
+
+        commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Image), 0, descriptorSets.at(descriptorSetTypes::Simple)[currentFrame], nullptr);
+
+        commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+
+        commandBuffer.endRenderPass();
+        commandBuffer.end();
+    }
+
+    void Renderer::updateUniformBuffer(uint32_t currentImage)
+    {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        UniformBufferObject ubo{
+            .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+            .proj = glm::perspective(glm::radians(45.0f), swapchain.swapChainExtent.width / (float)swapchain.swapChainExtent.height, 0.1f, 10.0f)};
+
+        ubo.proj[1][1] *= -1;
+
+        memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    }
+
+    void Renderer::createUniformBuffers()
+    {
+        vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        uniformBuffers.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMemory.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMapped.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+
+        for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffers[i], uniformBuffersMemory[i]);
+            uniformBuffersMapped[i] = device.getDevice().mapMemory(uniformBuffersMemory[i], 0, bufferSize);
         }
     }
 }

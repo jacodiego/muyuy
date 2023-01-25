@@ -24,6 +24,7 @@ namespace muyuy::video
         bool singletonInitialize() { return true; };
         void initialize(SDL_Event *);
         SDL_Event *getEvent() { return event; };
+        void draw();
         void swapBuffer();
         void resize(int width, int height);
         void destroy();

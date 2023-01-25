@@ -17,6 +17,11 @@ namespace muyuy::video
         renderer.initialize(event);
     }
 
+    void VideoEngine::draw()
+    {
+        renderer.draw();
+    }
+
     void VideoEngine::swapBuffer()
     {
     }

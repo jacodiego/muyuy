@@ -21,24 +21,19 @@ namespace muyuy::video
             throw std::runtime_error("failed to load texture image!");
         }
 
-        vk::Buffer stagingBuffer;
-        vk::DeviceMemory stagingBufferMemory;
-
-        // createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-        // void *data;
-        // vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
-        // memcpy(data, pixels, static_cast<size_t>(imageSize));
-        // vkUnmapMemory(device, stagingBufferMemory);
+        buffer.initialize(pixels, imageSize);
 
         stbi_image_free(pixels);
 
         createImage(texWidth, texHeight, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
         transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-        copyBufferToImage(stagingBuffer, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        buffer.copyBufferToImage(textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-        device.getDevice().destroyBuffer(stagingBuffer);
-        device.getDevice().freeMemory(stagingBufferMemory);
+        buffer.destroy();
+
+        createTextureImageView();
+        createTextureSampler();
     }
 
     void Texture::createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
@@ -116,26 +111,6 @@ namespace muyuy::video
         device.endSingleTimeCommands(commandBuffer);
     }
 
-    void Texture::copyBufferToImage(vk::Buffer buffer, uint32_t width, uint32_t height)
-    {
-        vk::CommandBuffer commandBuffer = device.beginSingleTimeCommands();
-
-        vk::BufferImageCopy region{
-            .bufferOffset = 0,
-            .bufferRowLength = 0,
-            .bufferImageHeight = 0,
-            .imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor,
-            .imageSubresource.mipLevel = 0,
-            .imageSubresource.baseArrayLayer = 0,
-            .imageSubresource.layerCount = 1,
-            .imageOffset = {0, 0, 0},
-            .imageExtent = {width, height, 1}};
-
-        commandBuffer.copyBufferToImage(buffer, textureImage, vk::ImageLayout::eTransferDstOptimal, region);
-
-        device.endSingleTimeCommands(commandBuffer);
-    }
-
     void Texture::createTextureImageView()
     {
         textureImageView = device.createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
@@ -149,19 +124,19 @@ namespace muyuy::video
         vk::SamplerCreateInfo samplerInfo{
             .magFilter = vk::Filter::eLinear,
             .minFilter = vk::Filter::eLinear,
+            .mipmapMode = vk::SamplerMipmapMode::eLinear,
             .addressModeU = vk::SamplerAddressMode::eRepeat,
             .addressModeV = vk::SamplerAddressMode::eRepeat,
             .addressModeW = vk::SamplerAddressMode::eRepeat,
+            .mipLodBias = 0.0f,
             .anisotropyEnable = VK_TRUE,
             .maxAnisotropy = properties.limits.maxSamplerAnisotropy,
-            .borderColor = vk::BorderColor::eIntOpaqueBlack,
-            .unnormalizedCoordinates = VK_FALSE,
             .compareEnable = VK_FALSE,
             .compareOp = vk::CompareOp::eAlways,
-            .mipmapMode = vk::SamplerMipmapMode::eLinear,
-            .mipLodBias = 0.0f,
             .minLod = 0.0f,
-            .maxLod = 0.0f};
+            .maxLod = 0.0f,
+            .borderColor = vk::BorderColor::eIntOpaqueBlack,
+            .unnormalizedCoordinates = VK_FALSE};
 
         textureSampler = device.getDevice().createSampler(samplerInfo);
     }
