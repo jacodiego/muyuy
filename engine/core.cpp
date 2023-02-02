@@ -31,8 +31,8 @@ namespace muyuy
         {
             SDL_PollEvent(&event);
 
-            videoManager->draw();
             screenManager->update();
+            screenManager->draw();
 
             switch (event.type)
             {
@@ -49,7 +49,6 @@ namespace muyuy
 
             videoManager->swapBuffer();
         }
-        // videoManager->waitIdle();
         videoManager->destroy();
         SDL_Quit();
     }

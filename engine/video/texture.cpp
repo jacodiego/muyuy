@@ -5,16 +5,16 @@
 namespace muyuy::video
 {
 
-    Texture::Texture(Device &dev) : device(dev)
+    Texture::Texture(Device &dev, Renderer *ren) : device(dev), renderer(ren)
     {
     }
 
-    void Texture::load(const char *filepath)
+    void Texture::load(const char *filepath, vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
     {
 
-        int texWidth, texHeight, texChannels;
-        stbi_uc *pixels = stbi_load(filepath, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        vk::DeviceSize imageSize = texWidth * texHeight * 4;
+        int texChannels;
+        stbi_uc *pixels = stbi_load(filepath, &width, &height, &texChannels, STBI_rgb_alpha);
+        vk::DeviceSize imageSize = width * height * 4;
 
         if (!pixels)
         {
@@ -25,18 +25,20 @@ namespace muyuy::video
 
         stbi_image_free(pixels);
 
-        createImage(texWidth, texHeight, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        createImage(vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
         transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-        buffer.copyBufferToImage(textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        buffer.copyBufferToImage(textureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
         transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
         buffer.destroy();
 
         createTextureImageView();
         createTextureSampler();
+        createUniformBuffers();
+        createDescriptorSets(descriptorPool, descriptorSetLayout);
     }
 
-    void Texture::createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
+    void Texture::createImage(vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
     {
         vk::ImageCreateInfo imageInfo{
             .imageType = vk::ImageType::e2D,
@@ -139,6 +141,94 @@ namespace muyuy::video
             .unnormalizedCoordinates = VK_FALSE};
 
         textureSampler = device.getDevice().createSampler(samplerInfo);
+    }
+
+    void Texture::createDescriptorSets(vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
+    {
+        std::vector<vk::DescriptorSetLayout> layouts(Swapchain::MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        vk::DescriptorSetAllocateInfo allocInfo{
+            .descriptorPool = descriptorPool,
+            .descriptorSetCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT),
+            .pSetLayouts = layouts.data()};
+
+        descriptorSets = device.getDevice().allocateDescriptorSets(allocInfo);
+
+        for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            vk::DescriptorBufferInfo bufferInfo{
+                .buffer = uniformBuffers[i],
+                .offset = 0,
+                .range = sizeof(UniformBufferObject)};
+
+            vk::DescriptorImageInfo imageInfo{
+                .sampler = textureSampler,
+                .imageView = textureImageView,
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal};
+
+            vk::WriteDescriptorSet descUniformBuffers{
+                .dstSet = descriptorSets[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eUniformBuffer,
+                .pBufferInfo = &bufferInfo,
+            };
+
+            vk::WriteDescriptorSet descImageSampler{
+                .dstSet = descriptorSets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .pImageInfo = &imageInfo,
+            };
+
+            std::vector<vk::WriteDescriptorSet> descriptorWrites{descUniformBuffers, descImageSampler};
+            device.getDevice().updateDescriptorSets(descriptorWrites, nullptr);
+        }
+    }
+
+    void Texture::draw()
+    {
+        renderer->addDrawTexture(this);
+    }
+
+    void Texture::undraw()
+    {
+        renderer->removeDrawTexture(this);
+    }
+
+    void Texture::createUniformBuffers()
+    {
+        vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        uniformBuffers.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMemory.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMapped.resize(Swapchain::MAX_FRAMES_IN_FLIGHT);
+
+        for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, uniformBuffers[i], uniformBuffersMemory[i]);
+            uniformBuffersMapped[i] = device.getDevice().mapMemory(uniformBuffersMemory[i], 0, bufferSize);
+        }
+    }
+
+    void Texture::updateUniformBuffer(uint32_t currentImage)
+    {
+        // static auto startTime = std::chrono::high_resolution_clock::now();
+
+        // auto currentTime = std::chrono::high_resolution_clock::now();
+        // float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+
+        // UniformBufferObject ubo{
+        //     .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        //     .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        //     .proj = glm::perspective(glm::radians(45.0f), swapchain.swapChainExtent.width / (float)swapchain.swapChainExtent.height, 0.1f, 10.0f)};
+
+        UniformBufferObject ubo{
+            .alpha = alpha};
+
+        memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 
 }

@@ -21,7 +21,6 @@ namespace muyuy::video
 
     private:
         void createSwapChain();
-        void recreateSwapChain();
         void createImageViews();
         void createRenderPass();
         void createFramebuffers();

@@ -9,8 +9,8 @@ namespace muyuy::script
 
     ScriptSupervisor::~ScriptSupervisor()
     {
-        _reset_functions.clear();
         _update_functions.clear();
+        _draw_functions.clear();
     }
 
     void ScriptSupervisor::addScript(const std::string &filename)
@@ -29,12 +29,12 @@ namespace muyuy::script
             lua.script_file(_script_filenames[i]);
             sol::function init = lua["initialize"];
             sol::function update = lua["update"];
-            sol::function reset = lua["reset"];
+            sol::function draw = lua["draw"];
 
             if (update.valid())
                 _update_functions.push_back(update);
-            if (reset.valid())
-                _reset_functions.push_back(reset);
+            if (draw.valid())
+                _draw_functions.push_back(draw);
 
             if (init.valid())
             {
@@ -55,5 +55,11 @@ namespace muyuy::script
     {
         for (uint32_t i = 0; i < _update_functions.size(); ++i)
             _update_functions[i]();
+    }
+
+    void ScriptSupervisor::draw()
+    {
+        for (uint32_t i = 0; i < _draw_functions.size(); ++i)
+            _draw_functions[i]();
     }
 }

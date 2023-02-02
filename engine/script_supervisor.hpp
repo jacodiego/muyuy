@@ -19,14 +19,15 @@ namespace muyuy::script
     {
     public:
         ~ScriptSupervisor();
-        void addScript(const std::string &filename);
-        void initialize(screen::GameScreen *gs);
+        void addScript(const std::string &);
+        void initialize(screen::GameScreen *);
         void update();
+        void draw();
 
     private:
         std::vector<std::string> _script_filenames;
-        std::vector<sol::function> _reset_functions;
         std::vector<sol::function> _update_functions;
-        // std::vector<video::Image *> _images;
+        std::vector<sol::function> _draw_functions;
+        std::vector<video::Texture *> _images;
     };
 }

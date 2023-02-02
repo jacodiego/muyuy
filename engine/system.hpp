@@ -89,6 +89,7 @@ namespace muyuy::system
         {
             return _auto_update;
         }
+        uint32_t getTimeXpirated() { return _time_expired; };
 
     protected:
         TimerState _state;

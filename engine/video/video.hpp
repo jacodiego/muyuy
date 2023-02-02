@@ -3,6 +3,7 @@
 #include "utils/singleton.hpp"
 #include "device.hpp"
 #include "renderer.hpp"
+#include "texture.hpp"
 
 #define GLM_FORCE_RADIANS 1
 #include <glm/glm.hpp>
@@ -11,6 +12,8 @@
 
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <map>
+#include <vector>
 
 namespace muyuy::video
 {
@@ -26,7 +29,8 @@ namespace muyuy::video
         SDL_Event *getEvent() { return event; };
         void draw();
         void swapBuffer();
-        void resize(int width, int height);
+        void resize(int, int);
+        Texture *createImage(const char *);
         void destroy();
 
     private:
@@ -37,6 +41,7 @@ namespace muyuy::video
         SDL_Event *event;
         Device device;
         Renderer renderer{device};
+        std::vector<Texture *> _screen_textures;
     };
 
 }

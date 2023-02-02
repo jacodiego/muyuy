@@ -168,6 +168,8 @@ namespace muyuy
             // VideoManager->SetDrawFlags(VIDEO_X_LEFT, VIDEO_Y_TOP, VIDEO_BLEND, 0);
             // VideoManager->SetStandardCoordSys();
 
+            getScriptSupervisor().draw();
+            video::videoManager->draw();
             // GetScriptSupervisor().DrawBackground();
             // GetScriptSupervisor().DrawForeground();
             // VideoManager->PopState();

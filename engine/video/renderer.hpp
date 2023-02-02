@@ -11,26 +11,15 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include <map>
-#include <chrono>
-
-#define GLM_FORCE_RADIANS
+#include <algorithm>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace muyuy::video
 {
 
-    struct UniformBufferObject
-    {
-        glm::mat4 model;
-        glm::mat4 view;
-        glm::mat4 proj;
-    };
-
     struct Vertex
     {
         glm::vec2 pos;
-        glm::vec3 color;
         glm::vec2 texCoord;
 
         static vk::VertexInputBindingDescription getBindingDescription()
@@ -43,9 +32,9 @@ namespace muyuy::video
             return bindingDescription;
         }
 
-        static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescriptions()
+        static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions()
         {
-            std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions{};
+            std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
 
             attributeDescriptions[0].binding = 0;
             attributeDescriptions[0].location = 0;
@@ -54,13 +43,8 @@ namespace muyuy::video
 
             attributeDescriptions[1].binding = 0;
             attributeDescriptions[1].location = 1;
-            attributeDescriptions[1].format = vk::Format::eR32G32B32Sfloat;
-            attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-            attributeDescriptions[2].binding = 0;
-            attributeDescriptions[2].location = 2;
-            attributeDescriptions[2].format = vk::Format::eR32G32Sfloat;
-            attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+            attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
+            attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 
             return attributeDescriptions;
         }
@@ -68,50 +52,49 @@ namespace muyuy::video
 
     enum class pipelineLayoutTypes
     {
-        Basic,
-        Image,
-        UboImage
+        Sampler,
+        UboSampler
     };
 
     enum class pipelineTypes
     {
-        Graphic
+        GraphicSampler,
+        GraphicUboSampler,
     };
 
     enum class shaderModuleTypes
     {
-        VertexSimple,
-        FragmentSimple
+        VertexSampler,
+        FragmentSampler,
+        VertexUboSampler,
+        FragmentUboSampler
     };
 
-    enum class descriptorSetLayoutTypes
+    enum class descriptorTypes
     {
-        SamplerImage,
+        Sampler,
         Ubo,
         UboSampler
     };
 
-    enum class descriptorSetTypes
-    {
-        Simple
-    };
-
     class Device;
     class Swapchain;
+    class Texture;
     class Renderer
     {
 
         // const std::vector<Vertex> vertices = {
-        //     {{-1.0f, -1.0f}, {1.0f, 0.3f, 0.7f}, {1.0f, 0.0f}},
-        //     {{1.0f, -1.0f}, {0.7f, 1.0f, 0.3f}, {0.0f, 0.0f}},
-        //     {{1.0f, 1.0f}, {0.7f, 0.3f, 1.0f}, {0.0f, 1.0f}},
-        //     {{-1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}}};
+        //     {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f, 0.5f}, {1.0f, 0.0f}},
+        //     {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f, 0.5f}, {0.0f, 0.0f}},
+        //     {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 1.0f}},
+        //     {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 0.5f}, {1.0f, 1.0f}}};
+
 
         const std::vector<Vertex> vertices = {
-            {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-            {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
+            {{-1.0f, -1.0f}, {1.0f, 0.0f}},
+            {{1.0f, -1.0f}, {0.0f, 0.0f}},
+            {{1.0f, 1.0f}, {0.0f, 1.0f}},
+            {{-1.0f, 1.0f}, {1.0f, 1.0f}}};
 
         const std::vector<uint16_t> indices = {
             0, 1, 2, 2, 3, 0};
@@ -120,34 +103,34 @@ namespace muyuy::video
         explicit Renderer(Device &);
         void initialize(SDL_Event *);
         void draw();
+        void resize() { framebufferResized = true; };
         void destroy();
+        vk::DescriptorPool getDescriptorPool(descriptorTypes dt) { return descriptorPool.at(dt); };
+        vk::DescriptorSetLayout getDescriptorSetLayout(descriptorTypes dt) { return descriptorSetLayouts.at(dt); };
+        void addDrawTexture(Texture *);
+        void removeDrawTexture(Texture *);
 
     private:
         void recreateSwapChain();
         void createCommandBuffers();
         void createPipelineLayout(pipelineLayoutTypes, vk::DescriptorSetLayout *);
-        void createPipeline(pipelineTypes, vk::PipelineLayout, vk::ShaderModule, vk::ShaderModule);
+        void createPipeline(pipelineTypes, vk::PipelineLayout, vk::PipelineVertexInputStateCreateInfo, vk::ShaderModule, vk::ShaderModule);
         void createShaderModule(shaderModuleTypes, std::string);
-        void createDescriptorSetLayout(descriptorSetLayoutTypes, std::vector<vk::DescriptorSetLayoutBinding>);
-        void createDescriptorPool();
-        void createDescriptorSets(descriptorSetTypes, descriptorSetLayoutTypes, vk::ImageView, vk::Sampler);
+        void createDescriptorSetLayout(descriptorTypes, std::vector<vk::DescriptorSetLayoutBinding>);
+        void createDescriptorPool(descriptorTypes, std::vector<vk::DescriptorPoolSize>);
         void recordCommandBuffer(vk::CommandBuffer, uint32_t);
-        void updateUniformBuffer(uint32_t);
-        void createUniformBuffers();
 
     private:
         Device &device;
         SDL_Event *event;
         Swapchain swapchain{device};
         Buffer buffer{device};
-        Texture texture;
         std::vector<vk::CommandBuffer> commandBuffers;
         std::map<pipelineLayoutTypes, vk::PipelineLayout> pipelineLayouts;
         std::map<pipelineTypes, vk::Pipeline> pipelines;
         std::map<shaderModuleTypes, vk::ShaderModule> shaders;
-        std::map<descriptorSetLayoutTypes, vk::DescriptorSetLayout> descriptorSetLayouts;
-        vk::DescriptorPool descriptorPool;
-        std::map<descriptorSetTypes, std::vector<vk::DescriptorSet>> descriptorSets;
+        std::map<descriptorTypes, vk::DescriptorSetLayout> descriptorSetLayouts;
+        std::map<descriptorTypes, vk::DescriptorPool> descriptorPool;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
 
@@ -156,9 +139,7 @@ namespace muyuy::video
         vk::Buffer indexBuffer;
         vk::DeviceMemory indexBufferMemory;
 
-        std::vector<vk::Buffer> uniformBuffers;
-        std::vector<vk::DeviceMemory> uniformBuffersMemory;
-        std::vector<void *> uniformBuffersMapped;
+        std::vector<Texture *> _draw_textures;
     };
 
 }

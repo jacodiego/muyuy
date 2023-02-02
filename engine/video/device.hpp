@@ -157,9 +157,7 @@ namespace muyuy
             uint32_t findMemoryType(uint32_t, vk::MemoryPropertyFlags);
             vk::CommandBuffer beginSingleTimeCommands();
             void endSingleTimeCommands(vk::CommandBuffer);
-            // void drawFrame();
             void waitIdle();
-            // void resizeScreen(int, int);
             vk::Extent2D getWindowExtent();
             vk::ImageView createImageView(vk::Image image, vk::Format format);
             vk::PhysicalDeviceProperties getPhysicalDeviceProperties();
