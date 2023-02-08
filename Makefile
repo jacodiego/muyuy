@@ -10,12 +10,12 @@ CC = g++
 COMPILER_FLAGS = -g -w -std=c++20
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lSDL2 -lvulkan -llua
+LINKER_FLAGS = -lSDL2 -lvulkan -llua -lfreetype
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = Muyuy
 
-INC=-I$(HOME)/Proyectos/Muyuy/
+INC=-I$(HOME)/Proyectos/Muyuy/ -I/usr/include/freetype2
 
 #This is the target that compiles our executable
 all : $(OBJS)

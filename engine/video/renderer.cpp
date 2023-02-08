@@ -79,10 +79,10 @@ namespace muyuy::video
 
         vk::DescriptorPoolSize uniformBuffer{
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * 3};
+            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * TEXTURES_COUNT};
         vk::DescriptorPoolSize combinedImageSampler{
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * 3};
+            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * TEXTURES_COUNT};
 
         std::vector<vk::DescriptorPoolSize> poolSizes{combinedImageSampler, uniformBuffer};
         createDescriptorPool(descriptorTypes::Sampler, poolSizes);
@@ -402,15 +402,7 @@ namespace muyuy::video
 
         for (auto texture : _draw_textures)
         {
-            vk::Viewport viewport{
-                .x = (float)swapchain.swapChainExtent.width / 2 - (float)texture->getWidth() / 2,
-                .y = (float)swapchain.swapChainExtent.height / 2 - (float)texture->getHeight() / 2,
-                .width = static_cast<float>(texture->getWidth()),
-                .height = static_cast<float>(texture->getHeight()),
-                .minDepth = 0.0f,
-                .maxDepth = 1.0f};
-
-            commandBuffer.setViewport(0, viewport);
+            commandBuffer.setViewport(0, texture->getViewport());
             commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Sampler), 0, texture->getDescriptorSet(currentFrame), nullptr);
             commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
             texture->updateUniformBuffer(currentFrame);

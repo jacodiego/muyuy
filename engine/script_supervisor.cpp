@@ -25,7 +25,7 @@ namespace muyuy::script
         {
             std::string tablespace = script::ScriptEngine::getTableSpace(_script_filenames[i]);
             sol::state &lua = script::scriptManager->getGlobalState();
-            lua.open_libraries(sol::lib::base);
+            lua.open_libraries(sol::lib::base, sol::lib::math);
             lua.script_file(_script_filenames[i]);
             sol::function init = lua["initialize"];
             sol::function update = lua["update"];

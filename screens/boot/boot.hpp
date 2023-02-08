@@ -38,7 +38,7 @@ namespace muyuy
         private:
             BootState _boot_state;
             static BootScreen *_current_instance;
-            system::SystemTimer _boot_timer;
+            bool _show_menu = false;
         };
     }
 };

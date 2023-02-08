@@ -36,6 +36,14 @@ namespace muyuy::video
         createTextureSampler();
         createUniformBuffers();
         createDescriptorSets(descriptorPool, descriptorSetLayout);
+
+        viewport = vk::Viewport{
+            .x = (float)renderer->getWindowExtent().width / 2 - (float)width / 2,
+            .y = (float)renderer->getWindowExtent().height / 2 - (float)height / 2,
+            .width = static_cast<float>(width),
+            .height = static_cast<float>(height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f};
     }
 
     void Texture::createImage(vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
@@ -229,6 +237,23 @@ namespace muyuy::video
             .alpha = alpha};
 
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+    }
+
+    void Texture::move(float x, float y)
+    {
+        viewport.setX(x);
+        viewport.setY(y);
+    }
+
+    void Texture::resize(int width, int height)
+    {
+        viewport.setWidth(width);
+        viewport.setHeight(height);
+    }
+
+    TextureWindow Texture::getTextureWindow()
+    {
+        return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
     }
 
 }

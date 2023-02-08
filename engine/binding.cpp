@@ -24,7 +24,13 @@ namespace muyuy::binding
         video_module.new_usertype<Texture>("Texture",
                                            "draw", &Texture::draw,
                                            "undraw", &Texture::undraw,
-                                           "setAlpha", &Texture::setAlpha);
+                                           "setAlpha", &Texture::setAlpha,
+                                           "move", &Texture::move,
+                                           "resize", &Texture::resize,
+                                           "getX", &Texture::getX,
+                                           "getY", &Texture::getY,
+                                           "getWidth", &Texture::getWidth,
+                                           "getHeight", &Texture::getHeight);
 
         video_module.new_usertype<VideoEngine>("VideoEngine",
                                                "createImage", &VideoEngine::createImage);

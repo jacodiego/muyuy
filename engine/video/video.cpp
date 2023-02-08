@@ -5,7 +5,7 @@ namespace muyuy::video
 
     VideoEngine *videoManager = nullptr;
 
-    VideoEngine::VideoEngine()
+    VideoEngine::VideoEngine() : _font_manager(nullptr)
     {
         window = SDL_CreateWindow("Muyuy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     }
@@ -15,6 +15,11 @@ namespace muyuy::video
         event = e;
         device.initialize(window);
         renderer.initialize(event);
+
+        auto font_atlas = std::make_shared<TextureAtlas>();
+        font_atlas->initialize(&renderer, 512, 512);
+        _font_manager = FontManager(font_atlas);
+        _font = _font_manager.getFont("resources/fonts/Unbounded-Regular.ttf", 36);
     }
 
     void VideoEngine::draw()

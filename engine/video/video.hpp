@@ -4,6 +4,8 @@
 #include "device.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
+#include "font_manager.hpp"
+#include "texture_atlas.hpp"
 
 #define GLM_FORCE_RADIANS 1
 #include <glm/glm.hpp>
@@ -18,6 +20,7 @@
 namespace muyuy::video
 {
     class VideoEngine;
+    class Font;
     extern VideoEngine *videoManager;
     class VideoEngine : public utils::Singleton<VideoEngine>
     {
@@ -42,6 +45,8 @@ namespace muyuy::video
         Device device;
         Renderer renderer{device};
         std::vector<Texture *> _screen_textures;
+        FontManager _font_manager;
+        std::shared_ptr<Font> _font;
     };
 
 }

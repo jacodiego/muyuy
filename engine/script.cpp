@@ -12,7 +12,7 @@ namespace muyuy::script
     ScriptEngine::ScriptEngine()
     {
         sol::state _global_state;
-        _global_state.open_libraries(sol::lib::base);
+        _global_state.open_libraries(sol::lib::base, sol::lib::math);
     };
 
     ScriptEngine::~ScriptEngine()
