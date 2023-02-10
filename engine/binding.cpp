@@ -4,6 +4,7 @@
 #include "engine/script.hpp"
 #include "engine/screen.hpp"
 #include "engine/system.hpp"
+#include "engine/video/video.hpp"
 
 namespace muyuy::binding
 {
@@ -22,18 +23,24 @@ namespace muyuy::binding
 
         sol::table video_module = lua["video"].get_or_create<sol::table>();
         video_module.new_usertype<Texture>("Texture",
-                                           "draw", &Texture::draw,
-                                           "undraw", &Texture::undraw,
-                                           "setAlpha", &Texture::setAlpha,
-                                           "move", &Texture::move,
-                                           "resize", &Texture::resize,
-                                           "getX", &Texture::getX,
-                                           "getY", &Texture::getY,
+                                           "draw", sol::overload(static_cast<void (Texture::*)(ScreenPosition, int, int, int, int, float, float)>(&Texture::draw), static_cast<void (Texture::*)(int, int, int, int, int, int, float, float)>(&Texture::draw)),
                                            "getWidth", &Texture::getWidth,
                                            "getHeight", &Texture::getHeight);
 
         video_module.new_usertype<VideoEngine>("VideoEngine",
-                                               "createImage", &VideoEngine::createImage);
+                                               "createImage", &VideoEngine::createImage,
+                                               "getWindowWidth", &VideoEngine::getWindowWidth,
+                                               "getWindowHeight", &VideoEngine::getWindowHeight);
+
+        video_module.new_enum<ScreenPosition>("ScreenPosition", {{"TopLeft", ScreenPosition::TopLeft},
+                                                                 {"TopCenter", ScreenPosition::TopCenter},
+                                                                 {"TopRight", ScreenPosition::TopRight},
+                                                                 {"MiddleLeft", ScreenPosition::MiddleLeft},
+                                                                 {"Center", ScreenPosition::Center},
+                                                                 {"MiddleRight", ScreenPosition::MiddleRight},
+                                                                 {"BottomLeft", ScreenPosition::BottomLeft},
+                                                                 {"BottomCenter", ScreenPosition::BottomCenter},
+                                                                 {"BottomRight", ScreenPosition::BottomRight}});
 
         // sol::table script_module = lua["script"].get_or_create<sol::table>();
         // script_module.new_usertype<ScriptSupervisor>("ScriptSupervisor",

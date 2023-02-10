@@ -14,17 +14,10 @@ namespace muyuy::video
         swapchain.initialize();
         createCommandBuffers();
 
-        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-        buffer.initialize(vertices.data(), bufferSize);
-        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, vertexBuffer, vertexBufferMemory);
-        buffer.copyBuffer(vertexBuffer, bufferSize);
-        buffer.destroy();
-
-        bufferSize = sizeof(indices[0]) * indices.size();
-
+        vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
         buffer.initialize(indices.data(), bufferSize);
-        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer, indexBufferMemory);
-        buffer.copyBuffer(indexBuffer, bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer.buffer, indexBuffer.bufferMemory);
+        buffer.copyBuffer(indexBuffer.buffer, bufferSize);
         buffer.destroy();
 
         vk::DescriptorSetLayoutBinding uboLayoutBinding{
@@ -112,15 +105,14 @@ namespace muyuy::video
         pipelineLayouts.clear();
     }
 
-    void Renderer::draw()
+    void Renderer::startFrame()
     {
 
         device.getDevice().waitForFences(swapchain.inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
-        uint32_t imageIndex;
         vk::Result result;
 
-        std::tie(result, imageIndex) = device.getDevice().acquireNextImageKHR(swapchain.swapChain, UINT64_MAX, swapchain.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE);
+        std::tie(result, currentImageIndex) = device.getDevice().acquireNextImageKHR(swapchain.swapChain, UINT64_MAX, swapchain.imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE);
 
         if (result == vk::Result::eErrorOutOfDateKHR)
         {
@@ -135,8 +127,12 @@ namespace muyuy::video
         device.getDevice().resetFences(swapchain.inFlightFences[currentFrame]);
         commandBuffers[currentFrame].reset();
 
-        recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
+        startRecordCommandBuffer();
+    }
 
+    void Renderer::endFrame()
+    {
+        endRecordCommandBuffer();
         vk::Semaphore waitSemaphores[] = {swapchain.imageAvailableSemaphores[currentFrame]};
         vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
         vk::Semaphore signalSemaphores[] = {swapchain.renderFinishedSemaphores[currentFrame]};
@@ -159,9 +155,9 @@ namespace muyuy::video
             .pWaitSemaphores = signalSemaphores,
             .swapchainCount = 1,
             .pSwapchains = swapChains,
-            .pImageIndices = &imageIndex};
+            .pImageIndices = &currentImageIndex};
 
-        result = device.getPresentQueue().presentKHR(&presentInfo);
+        vk::Result result = device.getPresentQueue().presentKHR(&presentInfo);
 
         if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || framebufferResized)
         {
@@ -362,11 +358,11 @@ namespace muyuy::video
         descriptorPool.insert(std::pair<descriptorTypes, vk::DescriptorPool>(type, device.getDevice().createDescriptorPool(poolInfo)));
     }
 
-    void Renderer::recordCommandBuffer(vk::CommandBuffer commandBuffer, uint32_t imageIndex)
+    void Renderer::startRecordCommandBuffer()
     {
         vk::CommandBufferBeginInfo beginInfo{};
 
-        if (commandBuffer.begin(&beginInfo) != vk::Result::eSuccess)
+        if (commandBuffers[currentFrame].begin(&beginInfo) != vk::Result::eSuccess)
         {
             throw std::runtime_error("failed to begin recording command buffer!");
         }
@@ -376,47 +372,68 @@ namespace muyuy::video
 
         vk::RenderPassBeginInfo renderPassInfo{
             .renderPass = swapchain.renderPass,
-            .framebuffer = swapchain.swapChainFramebuffers[imageIndex],
+            .framebuffer = swapchain.swapChainFramebuffers[currentImageIndex],
             .renderArea = {
                 .offset = {0, 0},
                 .extent = swapchain.swapChainExtent},
             .clearValueCount = 1,
             .pClearValues = &clearColor};
 
-        commandBuffer.beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
+        commandBuffers[currentFrame].beginRenderPass(&renderPassInfo, vk::SubpassContents::eInline);
+
+        vk::Viewport viewport{
+            .x = 0.0f,
+            .y = 0.0f,
+            .width = static_cast<float>(swapchain.swapChainExtent.width),
+            .height = static_cast<float>(swapchain.swapChainExtent.height),
+            .minDepth = 0.0f,
+            .maxDepth = 1.0f};
+
+        commandBuffers[currentFrame].setViewport(0, viewport);
 
         vk::Rect2D scissor{
             .offset = {0, 0},
             .extent = swapchain.swapChainExtent};
 
-        commandBuffer.setScissor(0, scissor);
+        commandBuffers[currentFrame].setScissor(0, scissor);
 
-        commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.at(pipelineTypes::GraphicSampler));
+        commandBuffers[currentFrame].bindPipeline(vk::PipelineBindPoint::eGraphics, pipelines.at(pipelineTypes::GraphicSampler));
+    }
 
-        vk::Buffer vertexBuffers[] = {vertexBuffer};
+    void Renderer::endRecordCommandBuffer()
+    {
+        commandBuffers[currentFrame].endRenderPass();
+        commandBuffers[currentFrame].end();
+    }
+
+    void Renderer::draw(Texture *texture, int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale)
+    {
+        float halfWidth = swapchain.swapChainExtent.width / 2;
+        float halfHeight = swapchain.swapChainExtent.height / 2;
+
+        std::vector<Vertex> vertices = {
+            {{(x + width) / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, {(offset_x + width) / texture->getWidth(), (offset_y + height) / texture->getHeight()}},
+            {{x / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, {offset_x / texture->getWidth(), (offset_y + height) / texture->getHeight()}},
+            {{x / halfWidth - 1.0f, y / halfHeight - 1.0f}, {offset_x / texture->getWidth(), offset_y / texture->getHeight()}},
+            {{(x + width) / halfWidth - 1.0f, y / halfHeight - 1.0f}, {(offset_x + width) / texture->getWidth(), offset_y / texture->getHeight()}}};
+
+        BoundBuffer temp;
+        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        buffer.initialize(vertices.data(), bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, temp.buffer, temp.bufferMemory);
+        buffer.copyBuffer(temp.buffer, bufferSize);
+        buffer.destroy();
+
+        vk::Buffer vertexBuffers[] = {temp.buffer};
         vk::DeviceSize offsets[] = {0};
 
-        commandBuffer.bindVertexBuffers(0, vertexBuffers, offsets);
+        commandBuffers[currentFrame].bindVertexBuffers(0, vertexBuffers, offsets);
 
-        commandBuffer.bindIndexBuffer(indexBuffer, 0, vk::IndexType::eUint16);
+        commandBuffers[currentFrame].bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
 
-        for (auto texture : _draw_textures)
-        {
-            commandBuffer.setViewport(0, texture->getViewport());
-            commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Sampler), 0, texture->getDescriptorSet(currentFrame), nullptr);
-            commandBuffer.drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-            texture->updateUniformBuffer(currentFrame);
-        }
-        commandBuffer.endRenderPass();
-        commandBuffer.end();
+        commandBuffers[currentFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Sampler), 0, texture->getDescriptorSet(currentFrame), nullptr);
+        commandBuffers[currentFrame].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+        texture->updateUniformBuffer(currentFrame, alpha, scale);
     }
 
-    void Renderer::addDrawTexture(Texture *texture)
-    {
-        _draw_textures.push_back(texture);
-    }
-    void Renderer::removeDrawTexture(Texture *texture)
-    {
-        _draw_textures.erase(std::remove(_draw_textures.begin(), _draw_textures.end(), texture), _draw_textures.end());
-    }
 }

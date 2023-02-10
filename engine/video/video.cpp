@@ -7,7 +7,7 @@ namespace muyuy::video
 
     VideoEngine::VideoEngine() : _font_manager(nullptr)
     {
-        window = SDL_CreateWindow("Muyuy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        window = SDL_CreateWindow("Muyuy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_VULKAN);
     }
 
     void VideoEngine::initialize(SDL_Event *e)
@@ -22,9 +22,14 @@ namespace muyuy::video
         _font = _font_manager.getFont("resources/fonts/Unbounded-Regular.ttf", 36);
     }
 
-    void VideoEngine::draw()
+    void VideoEngine::startFrame()
     {
-        renderer.draw();
+        renderer.startFrame();
+    }
+
+    void VideoEngine::endFrame()
+    {
+        renderer.endFrame();
     }
 
     void VideoEngine::swapBuffer()

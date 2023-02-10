@@ -22,6 +22,7 @@ namespace muyuy::video
     class VideoEngine;
     class Font;
     extern VideoEngine *videoManager;
+
     class VideoEngine : public utils::Singleton<VideoEngine>
     {
         friend class utils::Singleton<VideoEngine>;
@@ -30,11 +31,14 @@ namespace muyuy::video
         bool singletonInitialize() { return true; };
         void initialize(SDL_Event *);
         SDL_Event *getEvent() { return event; };
-        void draw();
+        void startFrame();
+        void endFrame();
         void swapBuffer();
         void resize(int, int);
         Texture *createImage(const char *);
         void destroy();
+        int getWindowWidth() { return renderer.getWindowExtent().width; };
+        int getWindowHeight() { return renderer.getWindowExtent().height; };
 
     private:
         VideoEngine();

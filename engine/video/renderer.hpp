@@ -19,6 +19,11 @@
 namespace muyuy::video
 {
 
+    struct BoundBuffer
+    {
+        vk::Buffer buffer;
+        vk::DeviceMemory bufferMemory;
+    };
     struct Vertex
     {
         glm::vec2 pos;
@@ -91,24 +96,24 @@ namespace muyuy::video
         //     {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 1.0f}},
         //     {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 0.5f}, {1.0f, 1.0f}}};
 
-        const std::vector<Vertex> vertices = {
-            {{1.0f, 1.0f}, {1.0f, 1.0f}},
-            {{-1.0f, 1.0f}, {0.0f, 1.0f}},
-            {{-1.0f, -1.0f}, {0.0f, 0.0f}},
-            {{1.0f, -1.0f}, {1.0f, 0.0f}}};
+        // const std::vector<Vertex> vertices = {
+        //     {{1.0f, 1.0f}, {1.0f, 1.0f}},
+        //     {{-1.0f, 1.0f}, {0.0f, 1.0f}},
+        //     {{-1.0f, -1.0f}, {0.0f, 0.0f}},
+        //     {{1.0f, -1.0f}, {1.0f, 0.0f}}};
 
         const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
     public:
         explicit Renderer(Device &);
         void initialize(SDL_Event *);
-        void draw();
+        void startFrame();
+        void endFrame();
+        void draw(Texture *, int, int, int, int, int, int, float, float);
         void resize() { framebufferResized = true; };
         void destroy();
         vk::DescriptorPool getDescriptorPool(descriptorTypes dt) { return descriptorPool.at(dt); };
         vk::DescriptorSetLayout getDescriptorSetLayout(descriptorTypes dt) { return descriptorSetLayouts.at(dt); };
-        void addDrawTexture(Texture *);
-        void removeDrawTexture(Texture *);
         vk::Extent2D getWindowExtent() { return swapchain.swapChainExtent; };
 
     private:
@@ -119,7 +124,8 @@ namespace muyuy::video
         void createShaderModule(shaderModuleTypes, std::string);
         void createDescriptorSetLayout(descriptorTypes, std::vector<vk::DescriptorSetLayoutBinding>);
         void createDescriptorPool(descriptorTypes, std::vector<vk::DescriptorPoolSize>);
-        void recordCommandBuffer(vk::CommandBuffer, uint32_t);
+        void startRecordCommandBuffer();
+        void endRecordCommandBuffer();
 
     private:
         Device &device;
@@ -134,13 +140,10 @@ namespace muyuy::video
         std::map<descriptorTypes, vk::DescriptorPool> descriptorPool;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
+        uint32_t currentImageIndex;
 
-        vk::Buffer vertexBuffer;
-        vk::DeviceMemory vertexBufferMemory;
-        vk::Buffer indexBuffer;
-        vk::DeviceMemory indexBufferMemory;
-
-        std::vector<Texture *> _draw_textures;
+        std::vector<BoundBuffer> vertexBuffers;
+        BoundBuffer indexBuffer;
     };
 
 }

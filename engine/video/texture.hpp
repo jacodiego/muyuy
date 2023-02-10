@@ -16,6 +16,7 @@ namespace muyuy::video
     struct UniformBufferObject
     {
         glm::float32_t alpha;
+        glm::float32_t scale;
     };
 
     class Renderer;
@@ -24,19 +25,12 @@ namespace muyuy::video
     public:
         Texture(Device &, Renderer *);
         void load(const char *, vk::DescriptorPool, vk::DescriptorSetLayout);
-        void draw();
-        void undraw();
+        void draw(ScreenPosition, int, int, int, int, float alpha = 0.5f, float scale = 1.0f);
+        void draw(int, int, int, int, int, int, float alpha = 0.5f, float scale = 1.0f);
         vk::DescriptorSet getDescriptorSet(int i) override { return descriptorSets[i]; };
         int getWidth() override { return width; };
         int getHeight() override { return height; };
-        float getAlpha() { return alpha; };
-        float getX() { return viewport.x; };
-        float getY() { return viewport.y; };
-        vk::Viewport getViewport() { return viewport; };
-        void setAlpha(float a) { alpha = a; };
-        void updateUniformBuffer(uint32_t);
-        void move(float, float);
-        void resize(int, int);
+        void updateUniformBuffer(uint32_t, float, float);
         TextureWindow getTextureWindow() override;
 
     private:
@@ -56,10 +50,7 @@ namespace muyuy::video
         vk::ImageView textureImageView;
         vk::Sampler textureSampler;
         std::vector<vk::DescriptorSet> descriptorSets;
-        vk::Viewport viewport;
         int width, height;
-        float alpha = 1;
-
         std::vector<vk::Buffer> uniformBuffers;
         std::vector<vk::DeviceMemory> uniformBuffersMemory;
         std::vector<void *> uniformBuffersMapped;

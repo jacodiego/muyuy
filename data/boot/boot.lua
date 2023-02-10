@@ -2,20 +2,24 @@ local Boot = nil
 local timer = nil
 local logo_image = nil
 local background_image = nil
-local logoX = nil
-local logoY = nil
-local logoWidth = nil
-local logoHeight = nil
+local logo_splash_image = nil
+local logo_splash_alpha = nil
+local logo_alpha = nil
+local logo_scale = nil
+local logo_x = nil
+local logo_y = nil
 
 function initialize(boot_instance)
     Boot = boot_instance;
     background_image = videoManager:createImage('data/boot/background.jpg');
     logo_splash_image = videoManager:createImage('data/boot/logo_splash.png');
     logo_image = videoManager:createImage('data/boot/logo.png');
-    timer = system.SystemTimer:new(19000, 0);
-    background_image:draw();
-    logo_splash_image:setAlpha(0.0);
-    logo_splash_image:draw();
+    logo_splash_alpha = 0;
+    logo_alpha = 0;
+    logo_scale = 1;
+    logo_x = math.floor(videoManager:getWindowWidth() / 2 - logo_image:getWidth() / 2);
+    logo_y = math.floor(videoManager:getWindowHeight() / 2 - logo_image:getHeight() /2);
+    timer = system.SystemTimer:new(20000, 0);
 end
 
 function update()
@@ -28,30 +32,20 @@ function update()
             return;
         end
 
-        if(timer:getTimeXpirated() <= 3000) then
-            logo_splash_image:setAlpha(timer:getTimeXpirated() / 3000);
+        if(timer:getTimeXpirated() <= 2000) then
+            logo_splash_alpha = timer:getTimeXpirated() / 2000;
         end
-        if(timer:getTimeXpirated() >= 7000) then
-            logo_splash_image:setAlpha( 1 - (timer:getTimeXpirated() - 7000) / 3000);
+        if(timer:getTimeXpirated() >= 5000) then
+            logo_splash_alpha = 1 - (timer:getTimeXpirated() - 5000) / 2000;
         end
-
-        if(timer:getTimeXpirated() == 10000) then
-            logo_splash_image:undraw();
-            logo_image:setAlpha(0.0);
-            logo_image:draw();
-            logoX = logo_image:getX();
-            logoY = logo_image:getY();
-            logoWidth = logo_image:getWidth();
-            logoHeight = logo_image:getHeight();
+        if(timer:getTimeXpirated() >= 7000 and timer:getTimeXpirated() <= 9000) then
+            logo_alpha = (timer:getTimeXpirated() - 7000) / 2000;
         end
 
-        if(timer:getTimeXpirated() <= 12000) then
-            logo_image:setAlpha((timer:getTimeXpirated() - 10000) / 2000);
-        end
-
-        if(timer:getTimeXpirated() >= 18000) then
-            logo_image:move( (logoX - (logoX - 30) * (timer:getTimeXpirated() - 18000) / 1000), ( logoY - (logoY - 25) * (timer:getTimeXpirated() - 18000) / 1000 ) );
-            logo_image:resize( math.floor(logoWidth - (logoWidth - logoWidth/1.5) * (timer:getTimeXpirated() - 18000) / 1000), math.floor(logoHeight - (logoHeight - logoHeight/1.5) * (timer:getTimeXpirated() - 18000) / 1000) );
+        if(timer:getTimeXpirated() >= 12000 and timer:getTimeXpirated() <= 13000) then
+            logo_x = math.floor(videoManager:getWindowWidth() / 2 - logo_image:getWidth() / 2 - (videoManager:getWindowWidth() / 2 - logo_image:getWidth() / 2 + 130) * (timer:getTimeXpirated() - 12000) / 1000);
+            logo_y = math.floor(videoManager:getWindowHeight() / 2 - logo_image:getHeight() /2 - (videoManager:getWindowHeight() / 2 - logo_image:getHeight() + 200) * (timer:getTimeXpirated() - 12000) / 1000);
+            logo_scale = 1 - 0.3 * (timer:getTimeXpirated() - 12000) / 1000;
         end
 
     else
@@ -60,4 +54,15 @@ function update()
 end
 
 function draw()
+    background_image:draw(video.ScreenPosition.Center, 0, 0, background_image:getWidth(), background_image:getHeight(), 1.0, 1.0);
+    if(Boot:getState() == boot.BootState.Intro) then       
+        if(timer:getTimeXpirated() <= 7000) then
+            logo_splash_image:draw(video.ScreenPosition.Center, 0, 0, logo_splash_image:getWidth(), logo_splash_image:getHeight(), logo_splash_alpha, 1.0);
+        else
+             logo_image:draw(logo_x, logo_y, 0, 0, logo_image:getWidth(), logo_image:getHeight(), logo_alpha, logo_scale);
+        end
+    else
+        logo_image:draw(logo_x, logo_y, 0, 0, logo_image:getWidth(), logo_image:getHeight(), logo_alpha, logo_scale);
+    end
+
 end

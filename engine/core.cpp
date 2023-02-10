@@ -27,12 +27,14 @@ namespace muyuy
 
         bool isRunning = true;
 
+        const uint32_t UPDATES_PER_SECOND = 60 + 10;
+        const uint32_t SKIP_RENDER_TICKS = 1000 / UPDATES_PER_SECOND;
+        uint32_t render_tick = SDL_GetTicks();
+        uint32_t next_render_tick = 0;
+
         while (isRunning)
         {
             SDL_PollEvent(&event);
-
-            screenManager->update();
-            screenManager->draw();
 
             switch (event.type)
             {
@@ -47,7 +49,22 @@ namespace muyuy
                 break;
             }
 
+            render_tick = SDL_GetTicks();
+
+            if (render_tick < next_render_tick)
+            {
+                SDL_Delay(next_render_tick - render_tick);
+                continue;
+            }
+
+            systemManager->updateTimers(render_tick);
+            screenManager->update();
+            videoManager->startFrame();
+            screenManager->draw();
+            videoManager->endFrame();
+
             videoManager->swapBuffer();
+            next_render_tick = SDL_GetTicks() + SKIP_RENDER_TICKS;
         }
         videoManager->destroy();
         SDL_Quit();

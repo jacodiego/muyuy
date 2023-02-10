@@ -37,13 +37,13 @@ namespace muyuy::video
         createUniformBuffers();
         createDescriptorSets(descriptorPool, descriptorSetLayout);
 
-        viewport = vk::Viewport{
-            .x = (float)renderer->getWindowExtent().width / 2 - (float)width / 2,
-            .y = (float)renderer->getWindowExtent().height / 2 - (float)height / 2,
-            .width = static_cast<float>(width),
-            .height = static_cast<float>(height),
-            .minDepth = 0.0f,
-            .maxDepth = 1.0f};
+        // viewport = vk::Viewport{
+        //     .x = (float)renderer->getWindowExtent().width / 2 - (float)width / 2,
+        //     .y = (float)renderer->getWindowExtent().height / 2 - (float)height / 2,
+        //     .width = static_cast<float>(width),
+        //     .height = static_cast<float>(height),
+        //     .minDepth = 0.0f,
+        //     .maxDepth = 1.0f};
     }
 
     void Texture::createImage(vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
@@ -196,14 +196,60 @@ namespace muyuy::video
         }
     }
 
-    void Texture::draw()
+    void Texture::draw(ScreenPosition sp, int offset_x, int offset_y, int width, int height, float alpha, float scale)
     {
-        renderer->addDrawTexture(this);
+        int x, y;
+        switch (sp)
+        {
+        case ScreenPosition::TopLeft:
+            x = 0;
+            y = 0;
+            break;
+        case ScreenPosition::TopCenter:
+            x = device.getWindowExtent().width / 2 - width / 2;
+            y = 0;
+            break;
+        case ScreenPosition::TopRight:
+            x = device.getWindowExtent().width - width;
+            y = 0;
+            break;
+
+        case ScreenPosition::MiddleLeft:
+            x = 0;
+            y = device.getWindowExtent().height / 2 - height / 2;
+            break;
+        case ScreenPosition::Center:
+            x = device.getWindowExtent().width / 2 - width / 2;
+            y = device.getWindowExtent().height / 2 - height / 2;
+            break;
+        case ScreenPosition::MiddleRight:
+            x = device.getWindowExtent().width - width;
+            y = device.getWindowExtent().height / 2 - height / 2;
+            break;
+
+        case ScreenPosition::BottomLeft:
+            x = 0;
+            y = device.getWindowExtent().height - height;
+            break;
+        case ScreenPosition::BottomCenter:
+            x = device.getWindowExtent().width / 2 - width / 2;
+            y = device.getWindowExtent().height - height;
+            break;
+        case ScreenPosition::BottomRight:
+            x = device.getWindowExtent().width - width;
+            y = device.getWindowExtent().height - height;
+            break;
+
+        default:
+            x = 0;
+            y = 0;
+        }
+        draw(x, y, offset_x, offset_y, width, height, alpha, scale);
     }
 
-    void Texture::undraw()
+    void Texture::draw(int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale)
     {
-        renderer->removeDrawTexture(this);
+        renderer->draw(this, x, y, offset_x, offset_y, width, height, alpha, scale);
     }
 
     void Texture::createUniformBuffers()
@@ -221,34 +267,13 @@ namespace muyuy::video
         }
     }
 
-    void Texture::updateUniformBuffer(uint32_t currentImage)
+    void Texture::updateUniformBuffer(uint32_t currentImage, float alpha, float scale)
     {
-        // static auto startTime = std::chrono::high_resolution_clock::now();
-
-        // auto currentTime = std::chrono::high_resolution_clock::now();
-        // float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-        // UniformBufferObject ubo{
-        //     .model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-        //     .view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
-        //     .proj = glm::perspective(glm::radians(45.0f), swapchain.swapChainExtent.width / (float)swapchain.swapChainExtent.height, 0.1f, 10.0f)};
-
         UniformBufferObject ubo{
-            .alpha = alpha};
+            .alpha = alpha,
+            .scale = scale};
 
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-    }
-
-    void Texture::move(float x, float y)
-    {
-        viewport.setX(x);
-        viewport.setY(y);
-    }
-
-    void Texture::resize(int width, int height)
-    {
-        viewport.setWidth(width);
-        viewport.setHeight(height);
     }
 
     TextureWindow Texture::getTextureWindow()

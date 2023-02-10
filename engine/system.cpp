@@ -164,4 +164,13 @@ namespace muyuy::system
 
         _auto_system_timers.erase(timer);
     }
+
+    void SystemEngine::updateTimers(uint32_t update_tick)
+    {
+        uint32_t tmp = _last_update;
+        _last_update = update_tick;
+        _update_time = _last_update - tmp;
+        for (std::set<SystemTimer *>::iterator i = _auto_system_timers.begin(); i != _auto_system_timers.end(); ++i)
+            (*i)->_autoUpdate();
+    }
 }

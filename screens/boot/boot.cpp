@@ -40,7 +40,6 @@ namespace muyuy
         void BootScreen::draw()
         {
             getScriptSupervisor().draw();
-            video::videoManager->draw();
         }
     }
 };
