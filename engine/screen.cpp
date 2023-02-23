@@ -4,7 +4,7 @@ namespace muyuy::screen
 {
 
     ScreenEngine *screenManager = nullptr;
-    const uint32_t FADE_IN_OUT_TIME = 700;
+    const uint32_t FADE_IN_OUT_TIME = 1700;
 
     //***********************************************************
     //********* GameScreen
@@ -14,9 +14,8 @@ namespace muyuy::screen
     {
     }
 
-    GameScreen::GameScreen(ScreenType st)
+    GameScreen::GameScreen(ScreenType st) : _screen_type(st)
     {
-        _screen_type = st;
     }
 
     GameScreen::~GameScreen() {}
@@ -168,27 +167,20 @@ namespace muyuy::screen
                 _push_stack.pop_back();
             }
 
-            // Make sure there is a game mode on the stack,
-            // otherwise we'll get a segmentation fault.
-            // if (_game_stack.empty())
-            // {
-            //     PRINT_WARNING << "game stack is empty, exiting application" << std::endl;
-            //     SystemManager->ExitGame();
-            // }
+            if (_game_stack.empty())
+            {
+                system::systemManager->exitGame();
+            }
 
             _game_stack.back()->reset();
             _state_change = false;
             _fade_out_finished = false;
 
-            // // We can now fade in, or not
-            // VideoManager->_TransitionalFadeIn(_fade_in ? FADE_IN_OUT_TIME : 0);
+            if (_fade_in)
+                video::videoManager->fadeIn(FADE_IN_OUT_TIME);
 
-            // // Call the system manager and tell it that the active game mode changed
-            // // so it can update timers accordingly
-            // SystemManager->ExamineSystemTimers();
-
-            // // Re-initialize the game update timer so that the new active game mode does not begin with any update time to process
-            // SystemManager->InitializeUpdateTimer();
+            system::systemManager->examineSystemTimers();
+            system::systemManager->initializeUpdateTimer();
         }
 
         if (!_game_stack.empty())

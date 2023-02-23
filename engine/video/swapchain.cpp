@@ -153,7 +153,7 @@ namespace muyuy::video
             .srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput,
             .dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput,
             .srcAccessMask = vk::AccessFlagBits::eNone,
-            .dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite};
+            .dstAccessMask = vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite};
 
         vk::RenderPassCreateInfo renderPassInfo{
             .attachmentCount = 1,

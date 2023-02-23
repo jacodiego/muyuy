@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 #include "engine/script.hpp"
-#include "engine/video/video.hpp"
 #include "utils/singleton.hpp"
 
 namespace muyuy::screen
@@ -28,6 +27,5 @@ namespace muyuy::script
         std::vector<std::string> _script_filenames;
         std::vector<sol::function> _update_functions;
         std::vector<sol::function> _draw_functions;
-        std::vector<video::Texture *> _images;
     };
 }

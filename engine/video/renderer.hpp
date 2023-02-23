@@ -1,5 +1,6 @@
 #pragma once
 
+#include "types.hpp"
 #include "device.hpp"
 #include "swapchain.hpp"
 #include "texture.hpp"
@@ -14,102 +15,23 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 
-#define TEXTURES_COUNT 20
+#define TEXTURES_COUNT 4096
 
 namespace muyuy::video
 {
-
-    struct BoundBuffer
-    {
-        vk::Buffer buffer;
-        vk::DeviceMemory bufferMemory;
-    };
-    struct Vertex
-    {
-        glm::vec2 pos;
-        glm::vec2 texCoord;
-
-        static vk::VertexInputBindingDescription getBindingDescription()
-        {
-            vk::VertexInputBindingDescription bindingDescription{
-                .binding = 0,
-                .stride = sizeof(Vertex),
-                .inputRate = vk::VertexInputRate::eVertex};
-
-            return bindingDescription;
-        }
-
-        static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescriptions()
-        {
-            std::array<vk::VertexInputAttributeDescription, 2> attributeDescriptions{};
-
-            attributeDescriptions[0].binding = 0;
-            attributeDescriptions[0].location = 0;
-            attributeDescriptions[0].format = vk::Format::eR32G32Sfloat;
-            attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-            attributeDescriptions[1].binding = 0;
-            attributeDescriptions[1].location = 1;
-            attributeDescriptions[1].format = vk::Format::eR32G32Sfloat;
-            attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
-
-            return attributeDescriptions;
-        }
-    };
-
-    enum class pipelineLayoutTypes
-    {
-        Sampler,
-        UboSampler
-    };
-
-    enum class pipelineTypes
-    {
-        GraphicSampler,
-        GraphicUboSampler,
-    };
-
-    enum class shaderModuleTypes
-    {
-        VertexSampler,
-        FragmentSampler,
-        VertexUboSampler,
-        FragmentUboSampler
-    };
-
-    enum class descriptorTypes
-    {
-        Sampler,
-        Ubo,
-        UboSampler
-    };
 
     class Device;
     class Swapchain;
     class Texture;
     class Renderer
     {
-
-        // const std::vector<Vertex> vertices = {
-        //     {{-1.0f, -1.0f}, {1.0f, 0.0f, 0.0f, 0.5f}, {1.0f, 0.0f}},
-        //     {{1.0f, -1.0f}, {0.0f, 1.0f, 0.0f, 0.5f}, {0.0f, 0.0f}},
-        //     {{1.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 0.5f}, {0.0f, 1.0f}},
-        //     {{-1.0f, 1.0f}, {1.0f, 1.0f, 1.0f, 0.5f}, {1.0f, 1.0f}}};
-
-        // const std::vector<Vertex> vertices = {
-        //     {{1.0f, 1.0f}, {1.0f, 1.0f}},
-        //     {{-1.0f, 1.0f}, {0.0f, 1.0f}},
-        //     {{-1.0f, -1.0f}, {0.0f, 0.0f}},
-        //     {{1.0f, -1.0f}, {1.0f, 0.0f}}};
-
-        const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
-
     public:
         explicit Renderer(Device &);
         void initialize(SDL_Event *);
         void startFrame();
         void endFrame();
-        void draw(Texture *, int, int, int, int, int, int, float, float);
+        void draw(Texture *, int, int, int, int, int, int, float, float, float);
+        void drawTiles(std::map<Texture *, std::vector<RenderTile>>);
         void resize() { framebufferResized = true; };
         void destroy();
         vk::DescriptorPool getDescriptorPool(descriptorTypes dt) { return descriptorPool.at(dt); };
@@ -142,8 +64,8 @@ namespace muyuy::video
         bool framebufferResized = false;
         uint32_t currentImageIndex;
 
-        std::vector<BoundBuffer> vertexBuffers;
-        BoundBuffer indexBuffer;
+        // std::vector<BoundBuffer> vertexBuffers;
+        // BoundBuffer indexBuffer;
     };
 
 }

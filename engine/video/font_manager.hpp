@@ -8,22 +8,37 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <map>
 
 namespace muyuy::video
 {
 
-    class TextureAtlas;
+    class Texture;
+    class Renderer;
+
+    enum class FontTypes
+    {
+        UnboundedXs,
+        UnboundedSm,
+        UnboundedMd,
+        UnboundedLg,
+        UnboundedXl,
+        MontserratRegular
+    };
 
     class FontManager
     {
     public:
-        explicit FontManager(std::shared_ptr<TextureAtlas>);
-
-        std::shared_ptr<Font> getFont(const std::string &, int);
+        FontManager(Renderer *);
+        void addFont(FontTypes, const std::string &, int);
+        void write(Texture *, FontTypes, const std::string &);
+        int textWidth(FontTypes, const std::string &);
+        // int textHeight(const std::string &);
 
     protected:
+        Renderer *renderer;
         FT_Library _library;
-        std::shared_ptr<TextureAtlas> _texture_atlas;
+        std::map<FontTypes, Font *> _fonts;
     };
 
 }

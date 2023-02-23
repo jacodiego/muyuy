@@ -45,7 +45,7 @@ namespace muyuy::video
         device.endSingleTimeCommands(commandBuffer);
     }
 
-    void Buffer::copyBufferToImage(vk::Image image, uint32_t width, uint32_t height)
+    void Buffer::copyBufferToImage(vk::Image image, uint32_t width, uint32_t height, uint32_t offset_x, uint32_t offset_y)
     {
         vk::CommandBuffer commandBuffer = device.beginSingleTimeCommands();
 
@@ -58,7 +58,7 @@ namespace muyuy::video
                 .mipLevel = 0,
                 .baseArrayLayer = 0,
                 .layerCount = 1},
-            .imageOffset = {0, 0, 0},
+            .imageOffset = {offset_x, offset_y, 0},
             .imageExtent = {width, height, 1}};
 
         commandBuffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, region);

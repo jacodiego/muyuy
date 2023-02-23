@@ -130,7 +130,13 @@ namespace muyuy::system
     //********* SystemEngine
     //***********************************************************
 
-    SystemEngine::SystemEngine() : _last_update(0), _update_time(1)
+    SystemEngine::SystemEngine() : _last_update(0),
+                                   _update_time(1),
+                                   _running(true),
+                                   _hours_played(0),
+                                   _minutes_played(0),
+                                   _seconds_played(0),
+                                   _milliseconds_played(0)
     {
     }
 
@@ -143,6 +149,11 @@ namespace muyuy::system
     {
         _last_update = SDL_GetTicks();
         _update_time = 1;
+        _hours_played = 0;
+        _minutes_played = 0;
+        _seconds_played = 0;
+        _milliseconds_played = 0;
+        _auto_system_timers.clear();
     }
 
     void SystemEngine::addAutoTimer(SystemTimer *timer)
@@ -170,7 +181,53 @@ namespace muyuy::system
         uint32_t tmp = _last_update;
         _last_update = update_tick;
         _update_time = _last_update - tmp;
+
+        _milliseconds_played += _update_time;
+        if (_milliseconds_played >= 1000)
+        {
+            _seconds_played += _milliseconds_played / 1000;
+            _milliseconds_played = _milliseconds_played % 1000;
+            if (_seconds_played >= 60)
+            {
+                _minutes_played += _seconds_played / 60;
+                _seconds_played = _seconds_played % 60;
+                if (_minutes_played >= 60)
+                {
+                    _hours_played += _minutes_played / 60;
+                    _minutes_played = _minutes_played % 60;
+                }
+            }
+        }
+
         for (std::set<SystemTimer *>::iterator i = _auto_system_timers.begin(); i != _auto_system_timers.end(); ++i)
             (*i)->_autoUpdate();
+    }
+
+    bool SystemEngine::isRunning()
+    {
+        return !input::inputManager->isQuitPress() && _running;
+    }
+
+    void SystemEngine::initializeUpdateTimer()
+    {
+        _last_update = SDL_GetTicks();
+        _update_time = 1;
+    }
+
+    void SystemEngine::examineSystemTimers()
+    {
+        screen::GameScreen *active_mode = screen::screenManager->getTop();
+
+        for (std::set<SystemTimer *>::iterator i = _auto_system_timers.begin(); i != _auto_system_timers.end(); ++i)
+        {
+            screen::GameScreen *timer_mode = (*i)->getScreenOwner();
+            if (timer_mode == nullptr)
+                continue;
+
+            if (timer_mode == active_mode)
+                (*i)->run();
+            else
+                (*i)->pause();
+        }
     }
 }

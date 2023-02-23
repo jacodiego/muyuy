@@ -23,7 +23,7 @@ namespace muyuy::binding
 
         sol::table video_module = lua["video"].get_or_create<sol::table>();
         video_module.new_usertype<Texture>("Texture",
-                                           "draw", sol::overload(static_cast<void (Texture::*)(ScreenPosition, int, int, int, int, float, float)>(&Texture::draw), static_cast<void (Texture::*)(int, int, int, int, int, int, float, float)>(&Texture::draw)),
+                                           "draw", sol::overload(static_cast<void (Texture::*)(ScreenPosition, int, int, int, int, float, float, float)>(&Texture::draw), static_cast<void (Texture::*)(int, int, int, int, int, int, float, float, float)>(&Texture::draw)),
                                            "getWidth", &Texture::getWidth,
                                            "getHeight", &Texture::getHeight);
 
@@ -42,10 +42,6 @@ namespace muyuy::binding
                                                                  {"BottomCenter", ScreenPosition::BottomCenter},
                                                                  {"BottomRight", ScreenPosition::BottomRight}});
 
-        // sol::table script_module = lua["script"].get_or_create<sol::table>();
-        // script_module.new_usertype<ScriptSupervisor>("ScriptSupervisor",
-        //                                              "createImage", &ScriptSupervisor::createImage);
-
         sol::table system_module = lua["system"].get_or_create<sol::table>();
         system_module.new_usertype<SystemTimer>("SystemTimer", sol::constructors<SystemTimer(), SystemTimer(uint32_t, uint32_t)>(),
                                                 "update", sol::overload(static_cast<void (SystemTimer::*)()>(&SystemTimer::update), static_cast<void (SystemTimer::*)(uint32_t)>(&SystemTimer::update)),
@@ -60,5 +56,6 @@ namespace muyuy::binding
 
         sol::global_table global = lua.globals();
         global["videoManager"] = videoManager;
+        global["screenManager"] = screenManager;
     }
 }

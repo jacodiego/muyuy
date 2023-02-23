@@ -4,9 +4,9 @@
 #include "renderer.hpp"
 #include "buffer.hpp"
 #include "swapchain.hpp"
+#include "color.hpp"
 
-#include "texture_base.hpp"
-
+#include <stb/stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -17,26 +17,30 @@ namespace muyuy::video
     {
         glm::float32_t alpha;
         glm::float32_t scale;
+        glm::float32_t multiplyColor;
     };
 
     class Renderer;
-    class Texture : public TextureBase
+    class Texture
     {
     public:
         Texture(Device &, Renderer *);
-        void load(const char *, vk::DescriptorPool, vk::DescriptorSetLayout);
-        void draw(ScreenPosition, int, int, int, int, float alpha = 0.5f, float scale = 1.0f);
-        void draw(int, int, int, int, int, int, float alpha = 0.5f, float scale = 1.0f);
-        vk::DescriptorSet getDescriptorSet(int i) override { return descriptorSets[i]; };
-        int getWidth() override { return width; };
-        int getHeight() override { return height; };
-        void updateUniformBuffer(uint32_t, float, float);
-        TextureWindow getTextureWindow() override;
+        void initialize(int, int, vk::Format, vk::DescriptorPool, vk::DescriptorSetLayout);
+        void addPixels(uint8_t *, uint32_t, uint32_t, uint32_t, uint32_t);
+        void loadFromImage(const char *, vk::DescriptorPool, vk::DescriptorSetLayout);
+        void draw(ScreenPosition, int, int, int, int, float alpha, float scale, float multiplyColor);
+        void draw(int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale, float multiplyColor);
+        vk::DescriptorSet getDescriptorSet(int i) { return descriptorSets[i]; };
+        int getWidth() { return width; };
+        int getHeight() { return height; };
+        void updateUniformBuffer(uint32_t, float, float, float);
+        glm::vec3 getColor() { return _color.getVec3(); };
+        void setColor(Color color) { _color = color; };
 
     private:
         void createImage(vk::Format, vk::ImageTiling, vk::ImageUsageFlags, vk::MemoryPropertyFlags);
-        void transitionImageLayout(vk::Format, vk::ImageLayout, vk::ImageLayout);
-        void createTextureImageView();
+        void transitionImageLayout(vk::ImageLayout, vk::ImageLayout);
+        void createTextureImageView(vk::Format);
         void createTextureSampler();
         void createDescriptorSets(vk::DescriptorPool, vk::DescriptorSetLayout);
         void createUniformBuffers();
@@ -54,6 +58,7 @@ namespace muyuy::video
         std::vector<vk::Buffer> uniformBuffers;
         std::vector<vk::DeviceMemory> uniformBuffersMemory;
         std::vector<void *> uniformBuffersMapped;
+        Color _color;
     };
 
 }

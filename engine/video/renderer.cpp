@@ -14,11 +14,11 @@ namespace muyuy::video
         swapchain.initialize();
         createCommandBuffers();
 
-        vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-        buffer.initialize(indices.data(), bufferSize);
-        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer.buffer, indexBuffer.bufferMemory);
-        buffer.copyBuffer(indexBuffer.buffer, bufferSize);
-        buffer.destroy();
+        // vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        // buffer.initialize(indices.data(), bufferSize);
+        // buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer.buffer, indexBuffer.bufferMemory);
+        // buffer.copyBuffer(indexBuffer.buffer, bufferSize);
+        // buffer.destroy();
 
         vk::DescriptorSetLayoutBinding uboLayoutBinding{
             .binding = 0,
@@ -72,10 +72,10 @@ namespace muyuy::video
 
         vk::DescriptorPoolSize uniformBuffer{
             .type = vk::DescriptorType::eUniformBuffer,
-            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * TEXTURES_COUNT};
+            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * 2};
         vk::DescriptorPoolSize combinedImageSampler{
             .type = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * TEXTURES_COUNT};
+            .descriptorCount = TEXTURES_COUNT};
 
         std::vector<vk::DescriptorPoolSize> poolSizes{combinedImageSampler, uniformBuffer};
         createDescriptorPool(descriptorTypes::Sampler, poolSizes);
@@ -263,9 +263,10 @@ namespace muyuy::video
             .depthClampEnable = VK_FALSE,
             .rasterizerDiscardEnable = VK_FALSE,
             .polygonMode = vk::PolygonMode::eFill,
-            .cullMode = vk::CullModeFlagBits::eBack,
-            //.frontFace = vk::FrontFace::eCounterClockwise,
-            .frontFace = vk::FrontFace::eClockwise,
+            //.cullMode = vk::CullModeFlagBits::eBack,
+            .cullMode = vk::CullModeFlagBits::eNone,
+            .frontFace = vk::FrontFace::eCounterClockwise,
+            //.frontFace = vk::FrontFace::eClockwise,
             .depthBiasEnable = VK_FALSE,
             .lineWidth = 1.0f};
 
@@ -292,7 +293,7 @@ namespace muyuy::video
             .logicOp = vk::LogicOp::eCopy,
             .attachmentCount = 1,
             .pAttachments = &colorBlendAttachment,
-            .blendConstants = {{0.0f, 0.0f, 0.0f, 0.0f}}};
+            .blendConstants = {{1.0f, 1.0f, 1.0f, 1.0f}}};
 
         vk::GraphicsPipelineCreateInfo pipelineInfo{
             .stageCount = 2,
@@ -351,7 +352,7 @@ namespace muyuy::video
     void Renderer::createDescriptorPool(descriptorTypes type, std::vector<vk::DescriptorPoolSize> poolSizes)
     {
         vk::DescriptorPoolCreateInfo poolInfo{
-            .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT),
+            .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * 2 + TEXTURES_COUNT,
             .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
             .pPoolSizes = poolSizes.data()};
 
@@ -368,7 +369,7 @@ namespace muyuy::video
         }
 
         vk::ClearValue clearColor{
-            .color = {{{1.0f, 1.0f, 1.0f, 1.0f}}}};
+            .color = {{{0.0f, 0.0f, 0.0f, 1.0f}}}};
 
         vk::RenderPassBeginInfo renderPassInfo{
             .renderPass = swapchain.renderPass,
@@ -406,34 +407,98 @@ namespace muyuy::video
         commandBuffers[currentFrame].end();
     }
 
-    void Renderer::draw(Texture *texture, int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale)
+    void Renderer::draw(Texture *texture, int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale, float multiplyColor)
     {
         float halfWidth = swapchain.swapChainExtent.width / 2;
         float halfHeight = swapchain.swapChainExtent.height / 2;
 
         std::vector<Vertex> vertices = {
-            {{(x + width) / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, {(offset_x + width) / texture->getWidth(), (offset_y + height) / texture->getHeight()}},
-            {{x / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, {offset_x / texture->getWidth(), (offset_y + height) / texture->getHeight()}},
-            {{x / halfWidth - 1.0f, y / halfHeight - 1.0f}, {offset_x / texture->getWidth(), offset_y / texture->getHeight()}},
-            {{(x + width) / halfWidth - 1.0f, y / halfHeight - 1.0f}, {(offset_x + width) / texture->getWidth(), offset_y / texture->getHeight()}}};
+            {{(x + width) / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, texture->getColor(), {(float)(offset_x + width) / (float)texture->getWidth(), (float)(offset_y + height) / (float)texture->getHeight()}},
+            {{x / halfWidth - 1.0f, (y + height) / halfHeight - 1.0f}, texture->getColor(), {(float)offset_x / (float)texture->getWidth(), (float)(offset_y + height) / (float)texture->getHeight()}},
+            {{x / halfWidth - 1.0f, y / halfHeight - 1.0f}, texture->getColor(), {(float)offset_x / (float)texture->getWidth(), (float)offset_y / (float)texture->getHeight()}},
+            {{(x + width) / halfWidth - 1.0f, y / halfHeight - 1.0f}, texture->getColor(), {(float)(offset_x + width) / (float)texture->getWidth(), (float)offset_y / (float)texture->getHeight()}}};
 
-        BoundBuffer temp;
-        vk::DeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+
+        BoundBuffer tmpVertex;
+        BoundBuffer tmpIndex;
+        vk::DeviceSize bufferSize;
+
+        bufferSize = sizeof(vertices[0]) * vertices.size();
         buffer.initialize(vertices.data(), bufferSize);
-        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, temp.buffer, temp.bufferMemory);
-        buffer.copyBuffer(temp.buffer, bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, tmpVertex.buffer, tmpVertex.bufferMemory);
+        buffer.copyBuffer(tmpVertex.buffer, bufferSize);
         buffer.destroy();
 
-        vk::Buffer vertexBuffers[] = {temp.buffer};
+        bufferSize = sizeof(indices[0]) * indices.size();
+        buffer.initialize(indices.data(), bufferSize);
+        buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, tmpIndex.buffer, tmpIndex.bufferMemory);
+        buffer.copyBuffer(tmpIndex.buffer, bufferSize);
+        buffer.destroy();
+
+        vk::Buffer vertexBuffers[] = {tmpVertex.buffer};
         vk::DeviceSize offsets[] = {0};
 
         commandBuffers[currentFrame].bindVertexBuffers(0, vertexBuffers, offsets);
 
-        commandBuffers[currentFrame].bindIndexBuffer(indexBuffer.buffer, 0, vk::IndexType::eUint16);
+        commandBuffers[currentFrame].bindIndexBuffer(tmpIndex.buffer, 0, vk::IndexType::eUint16);
 
         commandBuffers[currentFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Sampler), 0, texture->getDescriptorSet(currentFrame), nullptr);
         commandBuffers[currentFrame].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
-        texture->updateUniformBuffer(currentFrame, alpha, scale);
+        texture->updateUniformBuffer(currentFrame, alpha, scale, multiplyColor);
+    }
+
+    void Renderer::drawTiles(std::map<Texture *, std::vector<RenderTile>> texture_tiles)
+    {
+        float halfWidth = swapchain.swapChainExtent.width / 2;
+        float halfHeight = swapchain.swapChainExtent.height / 2;
+        std::vector<Vertex> vertices;
+        std::vector<uint16_t> indices;
+
+        for (const auto &texture : texture_tiles)
+        {
+            int i = 0;
+            for (auto tile : texture.second)
+            {
+                vertices.push_back({{(tile.x + tile.width) / halfWidth - 1.0f, (tile.y + tile.height) / halfHeight - 1.0f}, texture.first->getColor(), {(float)(tile.offset_x + tile.width) / (float)texture.first->getWidth(), (float)(tile.offset_y + tile.height) / (float)texture.first->getHeight()}});
+                vertices.push_back({{tile.x / halfWidth - 1.0f, (tile.y + tile.height) / halfHeight - 1.0f}, texture.first->getColor(), {(float)tile.offset_x / (float)texture.first->getWidth(), (float)(tile.offset_y + tile.height) / (float)texture.first->getHeight()}});
+                vertices.push_back({{tile.x / halfWidth - 1.0f, tile.y / halfHeight - 1.0f}, texture.first->getColor(), {(float)tile.offset_x / (float)texture.first->getWidth(), (float)tile.offset_y / (float)texture.first->getHeight()}});
+                vertices.push_back({{(tile.x + tile.width) / halfWidth - 1.0f, tile.y / halfHeight - 1.0f}, texture.first->getColor(), {(float)(tile.offset_x + tile.width) / (float)texture.first->getWidth(), (float)tile.offset_y / (float)texture.first->getHeight()}});
+                indices.push_back(i * 4);
+                indices.push_back(i * 4 + 1);
+                indices.push_back(i * 4 + 2);
+                indices.push_back(i * 4 + 2);
+                indices.push_back(i * 4 + 3);
+                indices.push_back(i * 4);
+                i++;
+            }
+            BoundBuffer tmpVertex;
+            BoundBuffer tmpIndex;
+            vk::DeviceSize bufferSize;
+
+            bufferSize = sizeof(vertices[0]) * vertices.size();
+            buffer.initialize(vertices.data(), bufferSize);
+            buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, tmpVertex.buffer, tmpVertex.bufferMemory);
+            buffer.copyBuffer(tmpVertex.buffer, bufferSize);
+            buffer.destroy();
+
+            bufferSize = sizeof(indices[0]) * indices.size();
+            buffer.initialize(indices.data(), bufferSize);
+            buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, tmpIndex.buffer, tmpIndex.bufferMemory);
+            buffer.copyBuffer(tmpIndex.buffer, bufferSize);
+            buffer.destroy();
+
+            vk::Buffer vertexBuffers[] = {tmpVertex.buffer};
+            vk::DeviceSize offsets[] = {0};
+
+            commandBuffers[currentFrame].bindVertexBuffers(0, vertexBuffers, offsets);
+
+            commandBuffers[currentFrame].bindIndexBuffer(tmpIndex.buffer, 0, vk::IndexType::eUint16);
+
+            commandBuffers[currentFrame].bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayouts.at(pipelineLayoutTypes::Sampler), 0, texture.first->getDescriptorSet(currentFrame), nullptr);
+            commandBuffers[currentFrame].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+            texture.first->updateUniformBuffer(currentFrame, 1, 1, 0);
+        }
     }
 
 }

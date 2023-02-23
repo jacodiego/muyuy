@@ -5,45 +5,52 @@
 namespace muyuy::video
 {
 
-    Texture::Texture(Device &dev, Renderer *ren) : device(dev), renderer(ren)
+    Texture::Texture(Device &dev, Renderer *ren) : device(dev),
+                                                   renderer(ren),
+                                                   width(0),
+                                                   height(0),
+                                                   _color(Color::White)
     {
     }
 
-    void Texture::load(const char *filepath, vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
+    void Texture::initialize(int w, int h, vk::Format format, vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
     {
+        width = w;
+        height = h;
+        createImage(format, vk::ImageTiling::eLinear, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
 
-        int texChannels;
-        stbi_uc *pixels = stbi_load(filepath, &width, &height, &texChannels, STBI_rgb_alpha);
-        vk::DeviceSize imageSize = width * height * 4;
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+        createTextureImageView(format);
+        createTextureSampler();
+        createUniformBuffers();
+        createDescriptorSets(descriptorPool, descriptorSetLayout);
+    }
+
+    void Texture::loadFromImage(const char *filepath, vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
+    {
+        int texChannels, w, h;
+        stbi_uc *pixels = stbi_load(filepath, &w, &h, &texChannels, STBI_rgb_alpha);
+        vk::DeviceSize imageSize = w * h * 4;
 
         if (!pixels)
         {
             throw std::runtime_error("failed to load texture image!");
         }
 
-        buffer.initialize(pixels, imageSize);
-
+        initialize(w, h, vk::Format::eR8G8B8A8Srgb, descriptorPool, descriptorSetLayout);
+        addPixels(pixels, 0, 0, w, h);
         stbi_image_free(pixels);
+    }
 
-        createImage(vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled, vk::MemoryPropertyFlagBits::eDeviceLocal);
-        transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-        buffer.copyBufferToImage(textureImage, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        transitionImageLayout(vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
-
+    void Texture::addPixels(uint8_t *pixels, uint32_t offset_x, uint32_t offset_y, uint32_t w, uint32_t h)
+    {
+        buffer.initialize(pixels, w * h * 4);
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        buffer.copyBufferToImage(textureImage, static_cast<uint32_t>(w), static_cast<uint32_t>(h), offset_x, offset_y);
+        transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
         buffer.destroy();
-
-        createTextureImageView();
-        createTextureSampler();
-        createUniformBuffers();
-        createDescriptorSets(descriptorPool, descriptorSetLayout);
-
-        // viewport = vk::Viewport{
-        //     .x = (float)renderer->getWindowExtent().width / 2 - (float)width / 2,
-        //     .y = (float)renderer->getWindowExtent().height / 2 - (float)height / 2,
-        //     .width = static_cast<float>(width),
-        //     .height = static_cast<float>(height),
-        //     .minDepth = 0.0f,
-        //     .maxDepth = 1.0f};
     }
 
     void Texture::createImage(vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties)
@@ -73,7 +80,7 @@ namespace muyuy::video
         device.getDevice().bindImageMemory(textureImage, textureImageMemory, 0);
     }
 
-    void Texture::transitionImageLayout(vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
+    void Texture::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
     {
         vk::CommandBuffer commandBuffer = device.beginSingleTimeCommands();
 
@@ -121,9 +128,9 @@ namespace muyuy::video
         device.endSingleTimeCommands(commandBuffer);
     }
 
-    void Texture::createTextureImageView()
+    void Texture::createTextureImageView(vk::Format format)
     {
-        textureImageView = device.createImageView(textureImage, vk::Format::eR8G8B8A8Srgb);
+        textureImageView = device.createImageView(textureImage, format);
     }
 
     void Texture::createTextureSampler()
@@ -196,7 +203,7 @@ namespace muyuy::video
         }
     }
 
-    void Texture::draw(ScreenPosition sp, int offset_x, int offset_y, int width, int height, float alpha, float scale)
+    void Texture::draw(ScreenPosition sp, int offset_x, int offset_y, int width, int height, float alpha, float scale, float multiplyColor)
     {
         int x, y;
         switch (sp)
@@ -244,12 +251,12 @@ namespace muyuy::video
             x = 0;
             y = 0;
         }
-        draw(x, y, offset_x, offset_y, width, height, alpha, scale);
+        draw(x, y, offset_x, offset_y, width, height, alpha, scale, multiplyColor);
     }
 
-    void Texture::draw(int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale)
+    void Texture::draw(int x, int y, int offset_x, int offset_y, int width, int height, float alpha, float scale, float multiplyColor)
     {
-        renderer->draw(this, x, y, offset_x, offset_y, width, height, alpha, scale);
+        renderer->draw(this, x, y, offset_x, offset_y, width, height, alpha, scale, multiplyColor);
     }
 
     void Texture::createUniformBuffers()
@@ -267,18 +274,14 @@ namespace muyuy::video
         }
     }
 
-    void Texture::updateUniformBuffer(uint32_t currentImage, float alpha, float scale)
+    void Texture::updateUniformBuffer(uint32_t currentImage, float alpha, float scale, float multiplyColor)
     {
         UniformBufferObject ubo{
             .alpha = alpha,
-            .scale = scale};
+            .scale = scale,
+            .multiplyColor = multiplyColor};
 
         memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-    }
-
-    TextureWindow Texture::getTextureWindow()
-    {
-        return TextureWindow{0.0f, 0.0f, 1.0f, 1.0f};
     }
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "texture_atlas.hpp"
+#include "texture.hpp"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -12,32 +12,30 @@
 namespace muyuy::video
 {
 
-    class TextureBase;
-
     class Glyph
     {
     public:
-        Glyph(FT_Face, FT_UInt, std::shared_ptr<TextureAtlas>);
+        Glyph(FT_Face, FT_UInt);
 
         int getLeft();
         int getTop();
         int getWidth();
         int getHeight();
+        int getBitmapWidth();
+        int getBitmapHeight();
         int getAdvance();
-
-        std::shared_ptr<TextureBase> getTexture();
+        void createBufferBitmap();
+        uint8_t *getBufferBitmap();
 
     protected:
         FT_Face _face;
         FT_UInt _glyph_index;
+        std::vector<uint8_t> buffer;
         int _left;
         int _top;
         int _width;
         int _height;
         int _advance;
-        std::shared_ptr<TextureBase> _texture;
-
-        void createTextureFromBitmap(std::shared_ptr<TextureAtlas> &);
     };
 
 }

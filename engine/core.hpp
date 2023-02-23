@@ -1,4 +1,7 @@
 #include <SDL2/SDL.h>
+
+#include "engine/game/game.hpp"
+#include "engine/input.hpp"
 #include "engine/screen.hpp"
 #include "engine/script.hpp"
 #include "engine/system.hpp"
@@ -16,5 +19,6 @@ namespace muyuy
     private:
         SDL_Event event;
         void initializeEngine();
+        bool loadSettings();
     };
 }

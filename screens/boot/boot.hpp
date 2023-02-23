@@ -1,44 +1,58 @@
 #pragma once
 
+#include "gui/option_menu.hpp"
+
+#include "engine/input.hpp"
+#include "engine/game/game.hpp"
 #include "engine/screen.hpp"
 #include "engine/script.hpp"
+#include "engine/system.hpp"
+#include "engine/video/video.hpp"
+#include "engine/video/color.hpp"
 
-namespace muyuy
+namespace muyuy::boot
 {
-    namespace boot
+    enum class BootState
     {
-        enum class BootState
-        {
-            Intro,
-            Credits,
-            Menu
-        };
+        Intro,
+        Credits,
+        Menu
+    };
 
-        class BootScreen : public screen::GameScreen
-        {
-        public:
-            BootScreen();
-            ~BootScreen();
-            static BootScreen *currentInstance()
-            {
-                return _current_instance;
-            }
-            void reset();
-            void update();
-            void draw();
-            BootState getState() const
-            {
-                return _boot_state;
-            }
-            void changeState(BootState boot_state)
-            {
-                _boot_state = boot_state;
-            }
+    enum class MenuOptions
+    {
+        Start,
+        Load,
+        Options,
+        Exit
+    };
 
-        private:
-            BootState _boot_state;
-            static BootScreen *_current_instance;
-            bool _show_menu = false;
-        };
-    }
+    class BootScreen : public screen::GameScreen
+    {
+    public:
+        BootScreen();
+        ~BootScreen();
+        static BootScreen *currentInstance()
+        {
+            return _current_instance;
+        }
+        void reset();
+        void update();
+        void draw();
+        BootState getState() const
+        {
+            return _boot_state;
+        }
+        void changeState(BootState boot_state)
+        {
+            _boot_state = boot_state;
+        }
+
+    private:
+        BootState _boot_state;
+        static BootScreen *_current_instance;
+        bool _show_menu = false;
+        bool _start_new_game;
+        gui::OptionMenu _main_menu;
+    };
 };

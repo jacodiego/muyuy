@@ -35,4 +35,18 @@ namespace muyuy::script
         ScriptEngine();
         sol::state _global_state;
     };
+
+    class ScriptReader
+    {
+    public:
+        ScriptReader(const std::string &);
+        bool openTable(const std::string &);
+        int readInt(const std::string &);
+        bool run(const std::string &);
+        void closeTable();
+
+    private:
+        sol::state &lua;
+        std::vector<std::string> _tables_open;
+    };
 }

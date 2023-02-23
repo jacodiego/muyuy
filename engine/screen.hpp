@@ -2,6 +2,7 @@
 
 #include "engine/script_supervisor.hpp"
 #include "engine/system.hpp"
+#include "engine/video/video.hpp"
 #include "utils/singleton.hpp"
 
 namespace muyuy::screen
@@ -28,7 +29,7 @@ namespace muyuy::screen
 
     public:
         GameScreen();
-        explicit GameScreen(ScreenType st);
+        GameScreen(ScreenType);
         virtual ~GameScreen();
         ScreenType getScreenType() const
         {

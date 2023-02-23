@@ -3,7 +3,7 @@
 namespace muyuy::video
 {
 
-    Glyph::Glyph(FT_Face face, FT_UInt ix, std::shared_ptr<TextureAtlas> ta) : _face(face), _glyph_index(ix)
+    Glyph::Glyph(FT_Face face, FT_UInt ix) : _face(face), _glyph_index(ix)
     {
         auto error = FT_Load_Glyph(_face, _glyph_index, FT_LOAD_DEFAULT);
         if (error)
@@ -24,10 +24,10 @@ namespace muyuy::video
         _height = static_cast<int>(glyphSlot->metrics.height / 64);
         _advance = static_cast<int>(glyphSlot->advance.x / 64);
 
-        createTextureFromBitmap(ta);
+        createBufferBitmap();
     }
 
-    void Glyph::createTextureFromBitmap(std::shared_ptr<TextureAtlas> &ta)
+    void Glyph::createBufferBitmap()
     {
         FT_GlyphSlot glyphSlot = _face->glyph;
 
@@ -45,7 +45,7 @@ namespace muyuy::video
             return;
         }
 
-        std::vector<uint8_t> buffer(bufferSize);
+        buffer.resize(bufferSize);
 
         uint8_t *src = glyphSlot->bitmap.buffer;
         uint8_t *startOfLine = src;
@@ -66,7 +66,6 @@ namespace muyuy::video
             }
             startOfLine += glyphSlot->bitmap.pitch;
         }
-        _texture = ta->add(width, height, buffer.data());
     }
 
     int Glyph::getLeft()
@@ -79,11 +78,6 @@ namespace muyuy::video
         return _top;
     }
 
-    std::shared_ptr<TextureBase> Glyph::getTexture()
-    {
-        return _texture;
-    }
-
     int Glyph::getWidth()
     {
         return _width;
@@ -94,9 +88,26 @@ namespace muyuy::video
         return _height;
     }
 
+    int Glyph::getBitmapWidth()
+    {
+        FT_GlyphSlot glyphSlot = _face->glyph;
+        return glyphSlot->bitmap.width;
+    }
+
+    int Glyph::getBitmapHeight()
+    {
+        FT_GlyphSlot glyphSlot = _face->glyph;
+        return glyphSlot->bitmap.rows;
+    }
+
     int Glyph::getAdvance()
     {
         return _advance;
+    }
+
+    uint8_t *Glyph::getBufferBitmap()
+    {
+        return buffer.data();
     }
 
 }

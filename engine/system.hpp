@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <map>
 #include <set>
+#include "engine/input.hpp"
 #include "engine/screen.hpp"
 #include "utils/singleton.hpp"
 
@@ -90,6 +91,10 @@ namespace muyuy::system
             return _auto_update;
         }
         uint32_t getTimeXpirated() { return _time_expired; };
+        screen::GameScreen *getScreenOwner() const
+        {
+            return _screen_owner;
+        }
 
     protected:
         TimerState _state;
@@ -115,14 +120,46 @@ namespace muyuy::system
         {
             return _update_time;
         }
-
+        void initializeUpdateTimer();
+        void examineSystemTimers();
         void removeAutoTimer(SystemTimer *timer);
         void addAutoTimer(SystemTimer *timer);
+        void setPlayTime(const uint8_t h, const uint8_t m, const uint8_t s)
+        {
+            _hours_played = h;
+            _minutes_played = m;
+            _seconds_played = s;
+            _milliseconds_played = 0;
+        }
+        uint8_t getPlayHours() const
+        {
+            return _hours_played;
+        }
+
+        uint8_t getPlayMinutes() const
+        {
+            return _minutes_played;
+        }
+
+        uint8_t getPlaySeconds() const
+        {
+            return _seconds_played;
+        }
+        bool isRunning();
+        void exitGame()
+        {
+            _running = false;
+        };
 
     private:
         SystemEngine();
         uint32_t _last_update;
         uint32_t _update_time;
+        uint8_t _hours_played;
+        uint8_t _minutes_played;
+        uint8_t _seconds_played;
+        uint16_t _milliseconds_played;
         std::set<SystemTimer *> _auto_system_timers;
+        bool _running;
     };
 }

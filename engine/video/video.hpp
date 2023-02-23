@@ -1,11 +1,13 @@
 #pragma once
 
+#include "engine/system.hpp"
 #include "utils/singleton.hpp"
 #include "device.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
 #include "font_manager.hpp"
-#include "texture_atlas.hpp"
+#include "fade_screen.hpp"
+#include "color.hpp"
 
 #define GLM_FORCE_RADIANS 1
 #include <glm/glm.hpp>
@@ -36,9 +38,17 @@ namespace muyuy::video
         void swapBuffer();
         void resize(int, int);
         Texture *createImage(const char *);
+        Texture *createTexture();
         void destroy();
+        void update();
         int getWindowWidth() { return renderer.getWindowExtent().width; };
         int getWindowHeight() { return renderer.getWindowExtent().height; };
+        void write(Texture *, FontTypes, std::string);
+        void fadeOut(uint32_t);
+        void fadeIn(uint32_t);
+        bool isFading() { return _fade_screen->isFading(); };
+        void drawFade();
+        void drawTiles(std::map<Texture *, std::vector<RenderTile>> tiles) { renderer.drawTiles(tiles); };
 
     private:
         VideoEngine();
@@ -49,8 +59,8 @@ namespace muyuy::video
         Device device;
         Renderer renderer{device};
         std::vector<Texture *> _screen_textures;
-        FontManager _font_manager;
-        std::shared_ptr<Font> _font;
+        FontManager _font_manager{&renderer};
+        FadeScreen *_fade_screen;
     };
 
 }

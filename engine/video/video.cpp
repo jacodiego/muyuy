@@ -5,7 +5,16 @@ namespace muyuy::video
 
     VideoEngine *videoManager = nullptr;
 
-    VideoEngine::VideoEngine() : _font_manager(nullptr)
+    const Color Color::White(1.0f, 1.0f, 1.0f);
+    const Color Color::Gray(0.5f, 0.5f, 0.5f);
+    const Color Color::Black(0.0f, 0.0f, 0.0f);
+    const Color Color::Red(1.0f, 0.0f, 0.0f);
+    const Color Color::Orange(1.0f, 0.4f, 0.0f);
+    const Color Color::Yellow(1.0f, 1.0f, 0.0f);
+    const Color Color::Green(0.0f, 1.0f, 0.0f);
+    const Color Color::Blue(0.0f, 0.0f, 1.0f);
+
+    VideoEngine::VideoEngine() : _fade_screen(nullptr)
     {
         window = SDL_CreateWindow("Muyuy", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_VULKAN);
     }
@@ -16,10 +25,22 @@ namespace muyuy::video
         device.initialize(window);
         renderer.initialize(event);
 
-        auto font_atlas = std::make_shared<TextureAtlas>();
-        font_atlas->initialize(&renderer, 512, 512);
-        _font_manager = FontManager(font_atlas);
-        _font = _font_manager.getFont("resources/fonts/Unbounded-Regular.ttf", 36);
+        // Fonts set
+        _font_manager.addFont(FontTypes::UnboundedXs, "resources/fonts/Unbounded-Regular.ttf", 9);
+        _font_manager.addFont(FontTypes::UnboundedSm, "resources/fonts/Unbounded-Regular.ttf", 12);
+        _font_manager.addFont(FontTypes::UnboundedMd, "resources/fonts/Unbounded-Regular.ttf", 16);
+        _font_manager.addFont(FontTypes::UnboundedLg, "resources/fonts/Unbounded-Regular.ttf", 24);
+        _font_manager.addFont(FontTypes::UnboundedXl, "resources/fonts/Unbounded-Regular.ttf", 36);
+        _font_manager.addFont(FontTypes::MontserratRegular, "resources/fonts/Montserrat-Regular.ttf", 36);
+
+        // Fade Screen Init
+        Texture *_overlay_fade = new Texture{device, &renderer};
+        _overlay_fade->initialize(getWindowWidth(), getWindowHeight(), vk::Format::eR8G8B8A8Srgb, renderer.getDescriptorPool(descriptorTypes::Sampler), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
+        uint8_t *fill = (uint8_t *)malloc(getWindowWidth() * getWindowHeight() * 4);
+        memset(fill, 255, getWindowWidth() * getWindowHeight() * 4);
+        _overlay_fade->addPixels(fill, 0, 0, getWindowWidth(), getWindowHeight());
+        free(fill);
+        _fade_screen = new FadeScreen{_overlay_fade};
     }
 
     void VideoEngine::startFrame()
@@ -30,6 +51,11 @@ namespace muyuy::video
     void VideoEngine::endFrame()
     {
         renderer.endFrame();
+    }
+
+    void VideoEngine::write(Texture *texture, FontTypes type, std::string text)
+    {
+        _font_manager.write(texture, type, text);
     }
 
     void VideoEngine::swapBuffer()
@@ -50,10 +76,38 @@ namespace muyuy::video
     Texture *VideoEngine::createImage(const char *pathfile)
     {
         Texture *texture = new Texture{device, &renderer};
-        texture->load(pathfile, renderer.getDescriptorPool(descriptorTypes::Sampler), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
+        texture->loadFromImage(pathfile, renderer.getDescriptorPool(descriptorTypes::Sampler), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
 
         _screen_textures.push_back(texture);
 
         return texture;
+    }
+
+    Texture *VideoEngine::createTexture()
+    {
+        Texture *texture = new Texture{device, &renderer};
+
+        return texture;
+    }
+
+    void VideoEngine::update()
+    {
+        uint32_t frame_time = system::systemManager->getUpdateTime();
+        _fade_screen->update(frame_time);
+    }
+
+    void VideoEngine::drawFade()
+    {
+        _fade_screen->draw();
+    }
+
+    void VideoEngine::fadeOut(uint32_t time)
+    {
+        _fade_screen->beginFadeOut(time);
+    }
+
+    void VideoEngine::fadeIn(uint32_t time)
+    {
+        _fade_screen->beginFadeIn(time);
     }
 }

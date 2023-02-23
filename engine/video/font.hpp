@@ -19,24 +19,21 @@ namespace muyuy::video
         int height;
     };
 
-    class TextureAtlas;
-    class Renderer;
+    class Texture;
 
     class Font
     {
     public:
-        Font(const FT_Face &, std::shared_ptr<TextureAtlas>);
+        Font(const FT_Face &);
 
         int getNumGlyphs();
-        std::shared_ptr<Glyph> getGlyph(uint16_t);
+        Glyph *getGlyph(uint16_t);
 
-        TextDimensions measure(const std::string &);
-        void draw(Renderer &, float, float, const std::string &);
+        // TextDimensions measure(const std::string &);
 
     protected:
         FT_Face _face;
-        std::shared_ptr<TextureAtlas> _texture_atlas;
-        std::map<uint16_t, std::shared_ptr<Glyph>> _glyphs;
+        std::map<uint16_t, Glyph *> _glyphs;
     };
 
 }
