@@ -1,14 +1,14 @@
 #include "boot.hpp"
 
-#include <iostream>
-
 namespace muyuy::boot
 {
     BootScreen *BootScreen::_current_instance = nullptr;
 
     BootScreen::BootScreen() : GameScreen(screen::ScreenType::Boot),
                                _boot_state(BootState::Intro),
-                               _start_new_game(false)
+                               _show_menu(false),
+                               _start_new_game(false),
+                               _exited(false)
     {
         _current_instance = this;
 
@@ -23,7 +23,9 @@ namespace muyuy::boot
         _main_menu.addOption("Salir");
     }
 
-    BootScreen::~BootScreen() {}
+    BootScreen::~BootScreen()
+    {
+    }
 
     void BootScreen::reset()
     {
@@ -48,6 +50,7 @@ namespace muyuy::boot
                 if (!video::videoManager->isFading())
                 {
                     _start_new_game = false;
+                    _exited = true;
                     game::gameManager->newGame();
                 }
                 return;
@@ -68,7 +71,7 @@ namespace muyuy::boot
                 {
                 case 0:
                     _start_new_game = true;
-                    video::videoManager->fadeOut(2000);
+                    video::videoManager->fadeOut(1000);
                     break;
                 case 3:
                     system::systemManager->exitGame();
@@ -82,10 +85,13 @@ namespace muyuy::boot
 
     void BootScreen::draw()
     {
-        getScriptSupervisor().draw();
-        if (_boot_state == BootState::Menu)
+        if (!_exited)
         {
-            _main_menu.draw();
+            getScriptSupervisor().draw();
+            if (_boot_state == BootState::Menu)
+            {
+                _main_menu.draw();
+            }
         }
     }
 };

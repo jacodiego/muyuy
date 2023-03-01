@@ -31,7 +31,7 @@ namespace muyuy::video
         int pos = 0;
         const int fontsize = 36;
         int y = fontsize;
-        texture->initialize(textWidth(type, text), fontsize * 1.5, vk::Format::eR8G8B8A8Unorm, renderer->getDescriptorPool(descriptorTypes::Sampler), renderer->getDescriptorSetLayout(descriptorTypes::Sampler));
+        texture->initialize(textWidth(type, text), fontsize * 1.5, vk::Format::eR8G8B8A8Unorm, renderer->getDescriptorPool(poolTypes::Global), renderer->getDescriptorSetLayout(descriptorTypes::Sampler));
         for (auto c : text)
         {
             auto glyph = _fonts.at(type)->getGlyph(c);

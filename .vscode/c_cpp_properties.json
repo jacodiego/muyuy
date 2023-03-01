@@ -5,9 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}",
-                "${workspaceFolder}",
-                "/usr/include/freetype2",
-                "${workspaceFolder}"
+                "/usr/include/freetype2"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

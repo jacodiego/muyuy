@@ -41,7 +41,7 @@ namespace muyuy::screen
     //********* ScreenEngine
     //***********************************************************
 
-    ScreenEngine::ScreenEngine() : _fade_out(false), _fade_in(false)
+    ScreenEngine::ScreenEngine() : _fade_out(false), _fade_in(false), _pop_count(0)
     {
     }
 
@@ -67,6 +67,9 @@ namespace muyuy::screen
     void ScreenEngine::pop(bool fade_out, bool fade_in)
     {
         _fade_in = fade_in;
+
+        ++_pop_count;
+        _state_change = true;
 
         if (fade_out)
         {

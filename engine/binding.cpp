@@ -1,6 +1,7 @@
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
+#include "engine/game.hpp"
 #include "engine/script.hpp"
 #include "engine/screen.hpp"
 #include "engine/system.hpp"
@@ -8,6 +9,7 @@
 
 namespace muyuy::binding
 {
+    using namespace game;
     using namespace script;
     using namespace screen;
     using namespace system;
@@ -16,6 +18,10 @@ namespace muyuy::binding
     void bindEngine()
     {
         sol::state &lua = scriptManager->getGlobalState();
+
+        // sol::table game_module = lua["game"].get_or_create<sol::table>();
+        // game_module.new_usertype<GameEngine>("GameEngine",
+        //                                      "addGlobalEntity", &GameEngine::addGlobalEntity);
 
         sol::table screen_module = lua["screen"].get_or_create<sol::table>();
         screen_module.new_usertype<GameScreen>("GameScreen",
@@ -55,7 +61,8 @@ namespace muyuy::binding
                                                 "getTimeXpirated", &SystemTimer::getTimeXpirated);
 
         sol::global_table global = lua.globals();
-        global["videoManager"] = videoManager;
+        global["gameManager"] = gameManager;
         global["screenManager"] = screenManager;
+        global["videoManager"] = videoManager;
     }
 }

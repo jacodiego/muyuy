@@ -14,12 +14,6 @@ namespace muyuy::video
         swapchain.initialize();
         createCommandBuffers();
 
-        // vk::DeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-        // buffer.initialize(indices.data(), bufferSize);
-        // buffer.createBuffer(bufferSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer.buffer, indexBuffer.bufferMemory);
-        // buffer.copyBuffer(indexBuffer.buffer, bufferSize);
-        // buffer.destroy();
-
         vk::DescriptorSetLayoutBinding uboLayoutBinding{
             .binding = 0,
             .descriptorType = vk::DescriptorType::eUniformBuffer,
@@ -78,12 +72,10 @@ namespace muyuy::video
             .descriptorCount = TEXTURES_COUNT};
 
         std::vector<vk::DescriptorPoolSize> poolSizes{combinedImageSampler, uniformBuffer};
-        createDescriptorPool(descriptorTypes::Sampler, poolSizes);
+        createDescriptorPool(poolTypes::Global, poolSizes);
+        createDescriptorPool(poolTypes::Screen, poolSizes);
         // poolSizes.push_back(uniformBuffer);
         // createDescriptorPool(descriptorTypes::UboSampler, poolSizes);
-
-        //  createDescriptorSets(descriptorTypes::Sampler, texture.getImageView(), texture.getSampler());
-        //  createDescriptorSets(descriptorTypes::UboSampler, texture.getImageView(), texture.getSampler());
     }
 
     void Renderer::destroy()
@@ -349,14 +341,14 @@ namespace muyuy::video
         descriptorSetLayouts.insert(std::pair<descriptorTypes, vk::DescriptorSetLayout>(type, device.getDevice().createDescriptorSetLayout(layoutInfo)));
     }
 
-    void Renderer::createDescriptorPool(descriptorTypes type, std::vector<vk::DescriptorPoolSize> poolSizes)
+    void Renderer::createDescriptorPool(poolTypes type, std::vector<vk::DescriptorPoolSize> poolSizes)
     {
         vk::DescriptorPoolCreateInfo poolInfo{
             .maxSets = static_cast<uint32_t>(Swapchain::MAX_FRAMES_IN_FLIGHT) * 2 + TEXTURES_COUNT,
             .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
             .pPoolSizes = poolSizes.data()};
 
-        descriptorPool.insert(std::pair<descriptorTypes, vk::DescriptorPool>(type, device.getDevice().createDescriptorPool(poolInfo)));
+        descriptorPool.insert(std::pair<poolTypes, vk::DescriptorPool>(type, device.getDevice().createDescriptorPool(poolInfo)));
     }
 
     void Renderer::startRecordCommandBuffer()
@@ -499,6 +491,11 @@ namespace muyuy::video
             commandBuffers[currentFrame].drawIndexed(static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
             texture.first->updateUniformBuffer(currentFrame, 1, 1, 0);
         }
+    }
+
+    void Renderer::resetScreenDescriptorPool()
+    {
+        device.getDevice().resetDescriptorPool(descriptorPool.at(poolTypes::Screen));
     }
 
 }

@@ -1,7 +1,5 @@
 #include "map_screen.hpp"
 
-#include <iostream>
-
 namespace muyuy::map
 {
     MapScreen *MapScreen::_current_instance = nullptr;
@@ -14,7 +12,6 @@ namespace muyuy::map
         _current_instance = this;
 
         getScriptSupervisor().initialize(this);
-        std::cout << "Map Screen init" << std::endl;
     }
 
     MapScreen::~MapScreen() {}
@@ -26,11 +23,14 @@ namespace muyuy::map
     void MapScreen::update()
     {
         GameScreen::update();
+        ecs::systems::Input::move(game::gameManager->getRegistry());
+        ecs::systems::Movement::character(game::gameManager->getRegistry(), _camera);
     }
 
     void MapScreen::draw()
     {
         getScriptSupervisor().draw();
         _map.draw(_camera);
+        ecs::systems::Drawer::walkers(game::gameManager->getRegistry(), 0, _camera);
     }
 };

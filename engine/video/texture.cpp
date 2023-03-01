@@ -13,6 +13,19 @@ namespace muyuy::video
     {
     }
 
+    Texture::~Texture()
+    {
+        for (size_t i = 0; i < Swapchain::MAX_FRAMES_IN_FLIGHT; i++)
+        {
+            device.getDevice().destroyBuffer(uniformBuffers[i]);
+            device.getDevice().freeMemory(uniformBuffersMemory[i]);
+        }
+        device.getDevice().destroySampler(textureSampler);
+        device.getDevice().destroyImageView(textureImageView);
+        device.getDevice().destroyImage(textureImage);
+        device.getDevice().freeMemory(textureImageMemory);
+    }
+
     void Texture::initialize(int w, int h, vk::Format format, vk::DescriptorPool descriptorPool, vk::DescriptorSetLayout descriptorSetLayout)
     {
         width = w;

@@ -113,6 +113,41 @@ namespace muyuy::input
             _setNewKey(_key.pause, key);
         }
 
+        bool upState() const
+        {
+            return _up_state;
+        }
+
+        bool downState() const
+        {
+            return _down_state;
+        }
+
+        bool leftState() const
+        {
+            return _left_state;
+        }
+
+        bool rightState() const
+        {
+            return _right_state;
+        }
+
+        bool confirmState() const
+        {
+            return _confirm_state;
+        }
+
+        bool cancelState() const
+        {
+            return _cancel_state;
+        }
+
+        bool menuState() const
+        {
+            return _menu_state;
+        }
+
     private:
         InputEngine();
         void _keyEventHandler(SDL_KeyboardEvent &key_event);

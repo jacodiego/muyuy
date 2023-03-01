@@ -7,6 +7,7 @@
 #include "texture.hpp"
 #include "font_manager.hpp"
 #include "fade_screen.hpp"
+#include "animation.hpp"
 #include "color.hpp"
 
 #define GLM_FORCE_RADIANS 1
@@ -16,13 +17,16 @@
 
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <string>
 #include <map>
 #include <vector>
+#include <unordered_map>
 
 namespace muyuy::video
 {
     class VideoEngine;
     class Font;
+    class Animation;
     extern VideoEngine *videoManager;
 
     class VideoEngine : public utils::Singleton<VideoEngine>
@@ -49,6 +53,9 @@ namespace muyuy::video
         bool isFading() { return _fade_screen->isFading(); };
         void drawFade();
         void drawTiles(std::map<Texture *, std::vector<RenderTile>> tiles) { renderer.drawTiles(tiles); };
+        void addAnimation(const std::string &, const std::string &);
+        void drawAnimation(const std::string &key, const std::string &desc, int x, int y);
+        void clearScreenTextures();
 
     private:
         VideoEngine();
@@ -58,9 +65,10 @@ namespace muyuy::video
         SDL_Event *event;
         Device device;
         Renderer renderer{device};
-        std::vector<Texture *> _screen_textures;
         FontManager _font_manager{&renderer};
         FadeScreen *_fade_screen;
+        std::unordered_map<std::string, Texture *> _screen_textures;
+        std::unordered_map<std::string, Animation *> _animations;
     };
 
 }

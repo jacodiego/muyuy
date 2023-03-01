@@ -35,7 +35,7 @@ namespace muyuy::video
 
         // Fade Screen Init
         Texture *_overlay_fade = new Texture{device, &renderer};
-        _overlay_fade->initialize(getWindowWidth(), getWindowHeight(), vk::Format::eR8G8B8A8Srgb, renderer.getDescriptorPool(descriptorTypes::Sampler), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
+        _overlay_fade->initialize(getWindowWidth(), getWindowHeight(), vk::Format::eR8G8B8A8Srgb, renderer.getDescriptorPool(poolTypes::Global), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
         uint8_t *fill = (uint8_t *)malloc(getWindowWidth() * getWindowHeight() * 4);
         memset(fill, 255, getWindowWidth() * getWindowHeight() * 4);
         _overlay_fade->addPixels(fill, 0, 0, getWindowWidth(), getWindowHeight());
@@ -75,12 +75,19 @@ namespace muyuy::video
 
     Texture *VideoEngine::createImage(const char *pathfile)
     {
-        Texture *texture = new Texture{device, &renderer};
-        texture->loadFromImage(pathfile, renderer.getDescriptorPool(descriptorTypes::Sampler), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
+        auto screen_find = _screen_textures.find(pathfile);
+        if (screen_find == _screen_textures.end())
+        {
+            Texture *texture = new Texture{device, &renderer};
+            texture->loadFromImage(pathfile, renderer.getDescriptorPool(poolTypes::Screen), renderer.getDescriptorSetLayout(descriptorTypes::Sampler));
 
-        _screen_textures.push_back(texture);
-
-        return texture;
+            _screen_textures.insert(std::make_pair(pathfile, texture));
+            return texture;
+        }
+        else
+        {
+            return screen_find->second;
+        }
     }
 
     Texture *VideoEngine::createTexture()
@@ -109,5 +116,36 @@ namespace muyuy::video
     void VideoEngine::fadeIn(uint32_t time)
     {
         _fade_screen->beginFadeIn(time);
+    }
+
+    void VideoEngine::addAnimation(const std::string &key, const std::string &script_file)
+    {
+        if (_animations.find(key) != _animations.end())
+        {
+            std::cerr << "Animation already exist" << std::endl;
+            return;
+        }
+        _animations.insert(std::make_pair(key, new Animation{script_file}));
+    }
+
+    void VideoEngine::drawAnimation(const std::string &key, const std::string &desc, int x, int y)
+    {
+        if (_animations.find(key) == _animations.end())
+        {
+            std::cerr << "Animation not found" << std::endl;
+            return;
+        }
+        _animations.at(key)->draw(desc, x, y);
+    }
+
+    void VideoEngine::clearScreenTextures()
+    {
+        device.waitIdle();
+        for (auto texture : _screen_textures)
+        {
+            delete texture.second;
+        }
+        _screen_textures.clear();
+        renderer.resetScreenDescriptorPool();
     }
 }

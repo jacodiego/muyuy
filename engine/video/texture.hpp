@@ -25,6 +25,7 @@ namespace muyuy::video
     {
     public:
         Texture(Device &, Renderer *);
+        ~Texture();
         void initialize(int, int, vk::Format, vk::DescriptorPool, vk::DescriptorSetLayout);
         void addPixels(uint8_t *, uint32_t, uint32_t, uint32_t, uint32_t);
         void loadFromImage(const char *, vk::DescriptorPool, vk::DescriptorSetLayout);

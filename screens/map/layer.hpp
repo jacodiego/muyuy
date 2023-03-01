@@ -9,6 +9,15 @@
 
 namespace muyuy::map
 {
+
+    enum class LayerTypes
+    {
+        UnderGround,
+        Ground,
+        OverGround,
+        Sky
+    };
+
     class Layer
     {
     public:

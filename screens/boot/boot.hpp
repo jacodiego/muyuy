@@ -3,7 +3,7 @@
 #include "gui/option_menu.hpp"
 
 #include "engine/input.hpp"
-#include "engine/game/game.hpp"
+#include "engine/game.hpp"
 #include "engine/screen.hpp"
 #include "engine/script.hpp"
 #include "engine/system.hpp"
@@ -51,8 +51,9 @@ namespace muyuy::boot
     private:
         BootState _boot_state;
         static BootScreen *_current_instance;
-        bool _show_menu = false;
+        bool _show_menu;
         bool _start_new_game;
+        bool _exited;
         gui::OptionMenu _main_menu;
     };
 };

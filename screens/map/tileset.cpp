@@ -53,7 +53,6 @@ namespace muyuy::map
 
     video::RenderTile Tileset::getRenderTile(int x, int y, int t)
     {
-        // texture->draw(x, y, tileClips[t - firstId].x, tileClips[t - firstId].y, tileClips[t - firstId].width, tileClips[t - firstId].height, 1.0f, 1.0f, 0.0f);
         return video::RenderTile{
             .texture = texture,
             .x = x,

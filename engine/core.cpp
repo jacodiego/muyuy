@@ -29,7 +29,7 @@ namespace muyuy
 
         bool isRunning = true;
 
-        const uint32_t UPDATES_PER_SECOND = 70;
+        const uint32_t UPDATES_PER_SECOND = 60;
         const uint32_t SKIP_RENDER_TICKS = 1000 / UPDATES_PER_SECOND;
         uint32_t render_tick = SDL_GetTicks();
         uint32_t next_render_tick = 0;

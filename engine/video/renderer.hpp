@@ -34,9 +34,10 @@ namespace muyuy::video
         void drawTiles(std::map<Texture *, std::vector<RenderTile>>);
         void resize() { framebufferResized = true; };
         void destroy();
-        vk::DescriptorPool getDescriptorPool(descriptorTypes dt) { return descriptorPool.at(dt); };
+        vk::DescriptorPool getDescriptorPool(poolTypes pt) { return descriptorPool.at(pt); };
         vk::DescriptorSetLayout getDescriptorSetLayout(descriptorTypes dt) { return descriptorSetLayouts.at(dt); };
         vk::Extent2D getWindowExtent() { return swapchain.swapChainExtent; };
+        void resetScreenDescriptorPool();
 
     private:
         void recreateSwapChain();
@@ -45,7 +46,7 @@ namespace muyuy::video
         void createPipeline(pipelineTypes, vk::PipelineLayout, vk::PipelineVertexInputStateCreateInfo, vk::ShaderModule, vk::ShaderModule);
         void createShaderModule(shaderModuleTypes, std::string);
         void createDescriptorSetLayout(descriptorTypes, std::vector<vk::DescriptorSetLayoutBinding>);
-        void createDescriptorPool(descriptorTypes, std::vector<vk::DescriptorPoolSize>);
+        void createDescriptorPool(poolTypes, std::vector<vk::DescriptorPoolSize>);
         void startRecordCommandBuffer();
         void endRecordCommandBuffer();
 
@@ -59,7 +60,7 @@ namespace muyuy::video
         std::map<pipelineTypes, vk::Pipeline> pipelines;
         std::map<shaderModuleTypes, vk::ShaderModule> shaders;
         std::map<descriptorTypes, vk::DescriptorSetLayout> descriptorSetLayouts;
-        std::map<descriptorTypes, vk::DescriptorPool> descriptorPool;
+        std::map<poolTypes, vk::DescriptorPool> descriptorPool;
         uint32_t currentFrame = 0;
         bool framebufferResized = false;
         uint32_t currentImageIndex;
