@@ -2,7 +2,7 @@
 
 namespace muyuy::map
 {
-    Layer::Layer(std::vector<std::vector<int>> &tTypes, std::vector<Tileset *> &ts, Coordinate lSize)
+    Layer::Layer(std::vector<std::vector<int>> &tTypes, std::vector<MapTileset> &ts, Coordinate lSize)
         : tilesets(ts), layerSize(lSize)
     {
         for (int y = 0; y < tTypes.size(); y++)
@@ -14,15 +14,17 @@ namespace muyuy::map
                 if (tileType != -1)
                 {
                     Tileset *usedTs = NULL;
+                    int firstId = 0;
                     for (auto tSet : ts)
                     {
-                        if (tileType >= tSet->getFirstId() && tileType <= tSet->getLastId())
+                        if (tileType >= tSet.first_id && tileType <= tSet.first_id + tSet.tileset->getLastId())
                         {
-                            usedTs = tSet;
+                            usedTs = tSet.tileset;
+                            firstId = tSet.first_id;
                             break;
                         }
                     }
-                    tileMap.push_back(new Tile(Coordinate{x * usedTs->getSize().width, y * usedTs->getSize().height}, usedTs, tileType));
+                    tileMap.push_back(new Tile(Coordinate{x * usedTs->getSize().width, y * usedTs->getSize().height}, usedTs, tileType - firstId));
                 }
                 else
                 {
@@ -40,18 +42,18 @@ namespace muyuy::map
         tileMap.clear();
     }
 
-    void Layer::draw(Rect &camera) const
+    std::vector<video::RenderTile> Layer::getRenderTiles(Rect &camera) const
     {
-        std::map<video::Texture *, std::vector<video::RenderTile>> render;
+        std::vector<video::RenderTile> render;
         for (int i = 0; i < tileMap.size(); i++)
         {
             if (tileMap[i] != NULL)
             {
                 video::RenderTile renderTile = tileMap[i]->getRenderTile(camera);
-                render[renderTile.texture].push_back(renderTile);
+                render.push_back(renderTile);
             }
         }
-        video::videoManager->drawTiles(render);
+        return render;
     }
 
     Tile *Layer::getTile(int i) const

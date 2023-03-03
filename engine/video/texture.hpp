@@ -37,6 +37,8 @@ namespace muyuy::video
         void updateUniformBuffer(uint32_t, float, float, float);
         glm::vec3 getColor() { return _color.getVec3(); };
         void setColor(Color color) { _color = color; };
+        vk::Sampler getSampler() { return textureSampler; };
+        vk::ImageView getImageView() { return textureImageView; };
 
     private:
         void createImage(vk::Format, vk::ImageTiling, vk::ImageUsageFlags, vk::MemoryPropertyFlags);

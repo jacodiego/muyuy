@@ -148,4 +148,14 @@ namespace muyuy::video
         _screen_textures.clear();
         renderer.resetScreenDescriptorPool();
     }
+
+    void VideoEngine::createTextureArray(const std::string &key, std::vector<TextureMap> texture_array)
+    {
+        if (_texture_arrays.find(key) != _texture_arrays.end())
+        {
+            std::cerr << "Texture Array already exist" << std::endl;
+            return;
+        }
+        _texture_arrays.insert(std::make_pair(key, new TextureArray{device, texture_array, renderer.getDescriptorPool(poolTypes::Screen), renderer.getDescriptorSetLayout(descriptorTypes::ArraySampler)}));
+    }
 }

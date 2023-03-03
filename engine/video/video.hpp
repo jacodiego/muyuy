@@ -5,6 +5,7 @@
 #include "device.hpp"
 #include "renderer.hpp"
 #include "texture.hpp"
+#include "texture_array.hpp"
 #include "font_manager.hpp"
 #include "fade_screen.hpp"
 #include "animation.hpp"
@@ -52,10 +53,11 @@ namespace muyuy::video
         void fadeIn(uint32_t);
         bool isFading() { return _fade_screen->isFading(); };
         void drawFade();
-        void drawTiles(std::map<Texture *, std::vector<RenderTile>> tiles) { renderer.drawTiles(tiles); };
+        void drawTextureArray(std::vector<RenderTile> tiles, const std::string &key) { renderer.drawTextureArray(tiles, _texture_arrays.at(key)); };
         void addAnimation(const std::string &, const std::string &);
         void drawAnimation(const std::string &key, const std::string &desc, int x, int y);
         void clearScreenTextures();
+        void createTextureArray(const std::string &, std::vector<TextureMap>);
 
     private:
         VideoEngine();
@@ -68,6 +70,7 @@ namespace muyuy::video
         FontManager _font_manager{&renderer};
         FadeScreen *_fade_screen;
         std::unordered_map<std::string, Texture *> _screen_textures;
+        std::unordered_map<std::string, TextureArray *> _texture_arrays;
         std::unordered_map<std::string, Animation *> _animations;
     };
 

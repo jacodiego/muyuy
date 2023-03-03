@@ -21,15 +21,15 @@ namespace muyuy::map
     class Layer
     {
     public:
-        Layer(std::vector<std::vector<int>> &, std::vector<Tileset *> &, Coordinate);
+        Layer(std::vector<std::vector<int>> &, std::vector<MapTileset> &, Coordinate);
         ~Layer();
-        void draw(Rect &) const;
+        std::vector<video::RenderTile> getRenderTiles(Rect &) const;
         Tile *getTile(int) const;
         std::vector<Rect> getColliders() const;
 
     private:
         std::vector<Tile *> tileMap;
-        std::vector<Tileset *> tilesets;
+        std::vector<MapTileset> tilesets;
         Coordinate layerSize;
     };
 }

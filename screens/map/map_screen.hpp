@@ -14,6 +14,8 @@
 
 #include "map.hpp"
 
+#include <unordered_map>
+
 namespace muyuy::map
 {
 
@@ -38,10 +40,12 @@ namespace muyuy::map
         void draw();
 
     private:
+        void loadTilesets();
+
+    private:
         static MapScreen *_current_instance;
-        std::string _map_filename;
-        std::string _plot_filename;
-        Map _map;
+        Map *_map;
+        std::unordered_map<std::string, Tileset *> _tilesets;
         Rect _camera;
         MapState _map_state;
     };

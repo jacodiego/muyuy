@@ -8,11 +8,11 @@ map.tile_rows = 30
 map.tilesets = {}
 map.tilesets[0] = {}
 map.tilesets[0].firstId = 1
-map.tilesets[0].path = "data/tilesets/mountain.lua"
+map.tilesets[0].name = "mountain"
 
 map.tilesets[1] = {}
 map.tilesets[1].firstId = 257
-map.tilesets[1].path = "data/tilesets/wood.lua"
+map.tilesets[1].name = "wood"
 
 
 map.layers = {}

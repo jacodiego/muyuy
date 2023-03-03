@@ -8,12 +8,19 @@ namespace muyuy::video
     struct RenderTile
     {
         Texture *texture;
+        int index;
         int x;
         int y;
         int offset_x;
         int offset_y;
         int width;
         int height;
+    };
+
+    struct TextureMap
+    {
+        Texture *texture;
+        int index;
     };
     struct BoundBuffer
     {
@@ -101,28 +108,27 @@ namespace muyuy::video
     enum class pipelineLayoutTypes
     {
         Sampler,
-        UboSampler
+        ArraySampler
     };
 
     enum class pipelineTypes
     {
-        GraphicSampler,
-        GraphicUboSampler,
+        Sampler,
+        ArraySampler,
     };
 
     enum class shaderModuleTypes
     {
         VertexSampler,
         FragmentSampler,
-        VertexUboSampler,
-        FragmentUboSampler
+        VertexArraySampler,
+        FragmentArraySampler
     };
 
     enum class descriptorTypes
     {
         Sampler,
-        Ubo,
-        UboSampler
+        ArraySampler
     };
 
     enum class poolTypes

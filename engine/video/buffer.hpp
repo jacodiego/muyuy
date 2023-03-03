@@ -9,6 +9,7 @@ namespace muyuy::video
     class Buffer
     {
         friend class Texture;
+        friend class TextureArray;
         friend class Renderer;
 
     public:

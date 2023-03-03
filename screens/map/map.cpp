@@ -2,7 +2,7 @@
 
 namespace muyuy::map
 {
-    Map::Map(std::string n) : name(n)
+    Map::Map(std::string n, std::unordered_map<std::string, Tileset *> *tilesets) : _name(n), _tilesets(tilesets)
     {
         sol::state lua;
         lua.open_libraries(sol::lib::base);
@@ -14,37 +14,16 @@ namespace muyuy::map
         sol::table sTilesets = lua["map"]["tilesets"];
         sol::table sLayers = lua["map"]["layers"];
 
-        mapSize = {m["tile_cols"], m["tile_rows"]};
-        tileSize = {m["tilewidth"], m["tileheight"]};
+        _map_size = {m["tile_cols"], m["tile_rows"]};
+        _tile_size = {m["tilewidth"], m["tileheight"]};
 
         for (int i = 0; i <= sTilesets.size(); i++)
         {
             sol::table ts = sTilesets[i].get<sol::table>();
 
-            lua.script_file(ts["path"].get<std::string>());
-
-            sol::table tileset = lua["tileset"];
-
-            std::map<int, Rect *> collitions;
-            sol::table colls = tileset["colliders"].get<sol::table>();
-
-            for (int c = 0; c <= colls.size(); c++)
-            {
-                collitions.insert(std::make_pair(colls[c]["id"].get<int>(), new Rect(colls[c]["x"].get<int>(),
-                                                                                     colls[c]["y"].get<int>(),
-                                                                                     colls[c]["width"].get<int>(),
-                                                                                     colls[c]["height"].get<int>())));
-            }
-
-            tilesets.push_back(new Tileset(
-                tileset["name"].get<std::string>(),
-                tileset["image"].get<std::string>(),
-                tileset["columns"].get<int>(),
-                tileset["rows"].get<int>(),
-                tileset["tilewidth"].get<int>(),
-                tileset["tileheight"].get<int>(),
-                ts["firstId"].get<int>(),
-                collitions));
+            _map_tilesets.push_back(MapTileset{
+                .first_id = ts["firstId"].get<int>(),
+                .tileset = _tilesets->at(ts["name"].get<std::string>())});
         }
 
         for (int l = 0; l <= sLayers.size(); l++)
@@ -58,52 +37,50 @@ namespace muyuy::map
                 map.push_back(row);
             }
 
-            layers.push_back(new Layer(map, tilesets, Coordinate{m["tile_cols"], m["tile_rows"]}));
+            _layers.push_back(new Layer(map, _map_tilesets, Coordinate{m["tile_cols"], m["tile_rows"]}));
         }
     }
 
     Map::~Map()
     {
-        for (auto l : layers)
+        for (auto l : _layers)
         {
             delete l;
         }
-        layers.clear();
-        for (auto ts : tilesets)
-        {
-            delete ts;
-        }
-        tilesets.clear();
+        _layers.clear();
     }
 
     std::vector<Layer *> Map::getLayers() const
     {
-        return layers;
+        return _layers;
     }
 
     void Map::draw(Rect &camera) const
     {
-        for (int i = 0; i < layers.size(); i++)
+        std::vector<video::RenderTile> render;
+        for (int i = 0; i < _layers.size(); i++)
         {
-            layers[i]->draw(camera);
+            std::vector<video::RenderTile> layers_tiles = _layers[i]->getRenderTiles(camera);
+            render.insert(render.end(), layers_tiles.begin(), layers_tiles.end());
         }
+        video::videoManager->drawTextureArray(render, "tilesets");
     }
 
     Size Map::getSize() const
     {
-        return Size{mapSize.width * tileSize.width, mapSize.height * tileSize.height};
+        return Size{_map_size.width * _tile_size.width, _map_size.height * _tile_size.height};
     }
 
     std::string Map::getName() const
     {
-        return name;
+        return _name;
     }
 
     bool Map::checkCollision(Rect player) const
     {
         bool coll = false;
 
-        for (auto layer : layers)
+        for (auto layer : _layers)
         {
             for (Rect collider : layer->getColliders())
             {
@@ -121,9 +98,9 @@ namespace muyuy::map
     {
         bool coll = false;
 
-        for (auto layer : layers)
+        for (auto layer : _layers)
         {
-            if (layer->getTile(location.x + (location.y) * mapSize.width)->getCollitionBox() != NULL)
+            if (layer->getTile(location.x + (location.y) * _map_size.width)->getCollitionBox() != NULL)
             {
                 coll = true;
                 break;
@@ -134,7 +111,7 @@ namespace muyuy::map
 
     Size Map::getGridSize() const
     {
-        return mapSize;
+        return _map_size;
     }
 
     // GridLocation Map::getGridPosition(Coordinate c) const
@@ -144,6 +121,6 @@ namespace muyuy::map
 
     SquareGrid Map::getGrid() const
     {
-        return grid;
+        return _grid;
     }
 };

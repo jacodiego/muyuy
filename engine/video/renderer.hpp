@@ -4,6 +4,7 @@
 #include "device.hpp"
 #include "swapchain.hpp"
 #include "texture.hpp"
+#include "texture_array.hpp"
 #include "buffer.hpp"
 
 #include "utils/file.hpp"
@@ -16,6 +17,7 @@
 #include <glm/glm.hpp>
 
 #define TEXTURES_COUNT 4096
+#define TEXTURE_ARRAY_LENGTH 2
 
 namespace muyuy::video
 {
@@ -23,6 +25,7 @@ namespace muyuy::video
     class Device;
     class Swapchain;
     class Texture;
+    class TextureArray;
     class Renderer
     {
     public:
@@ -31,7 +34,7 @@ namespace muyuy::video
         void startFrame();
         void endFrame();
         void draw(Texture *, int, int, int, int, int, int, float, float, float);
-        void drawTiles(std::map<Texture *, std::vector<RenderTile>>);
+        void drawTextureArray(std::vector<RenderTile>, TextureArray *);
         void resize() { framebufferResized = true; };
         void destroy();
         vk::DescriptorPool getDescriptorPool(poolTypes pt) { return descriptorPool.at(pt); };

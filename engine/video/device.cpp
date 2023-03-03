@@ -195,6 +195,10 @@ namespace muyuy::video
             SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
+        else
+        {
+            throw std::runtime_error("Extension not available");
+        }
 
         vk::PhysicalDeviceFeatures supportedFeatures = device.getFeatures();
 

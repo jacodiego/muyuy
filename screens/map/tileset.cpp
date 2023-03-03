@@ -2,8 +2,8 @@
 
 namespace muyuy::map
 {
-    Tileset::Tileset(std::string name, std::string img, int cols, int rows, int tWidth, int tHeight, int fId, std::map<int, Rect *> colls)
-        : name(name), columns(cols), rows(rows), tileSize({tWidth, tHeight}), firstId(fId), collitions(colls)
+    Tileset::Tileset(std::string img, int cols, int rows, int tWidth, int tHeight, int i, std::map<int, Rect *> colls)
+        : columns(cols), rows(rows), tileSize({tWidth, tHeight}), index(i), collitions(colls)
     {
         texture = video::videoManager->createImage(img.c_str());
         for (int y = 0; y < rows; y++)
@@ -30,12 +30,7 @@ namespace muyuy::map
 
     int Tileset::getLastId() const
     {
-        return firstId + columns * rows - 1;
-    }
-
-    int Tileset::getFirstId() const
-    {
-        return firstId;
+        return columns * rows - 1;
     }
 
     Size Tileset::getSize() const
@@ -45,22 +40,23 @@ namespace muyuy::map
 
     Rect *Tileset::getCollitionBox(int key) const
     {
-        if (collitions.find(key - firstId) == collitions.end())
+        if (collitions.find(key) == collitions.end())
             return NULL;
         else
-            return collitions.at(key - firstId);
+            return collitions.at(key);
     }
 
     video::RenderTile Tileset::getRenderTile(int x, int y, int t)
     {
         return video::RenderTile{
             .texture = texture,
+            .index = index,
             .x = x,
             .y = y,
-            .offset_x = tileClips[t - firstId].x,
-            .offset_y = tileClips[t - firstId].y,
-            .width = tileClips[t - firstId].width,
-            .height = tileClips[t - firstId].height};
+            .offset_x = tileClips[t].x,
+            .offset_y = tileClips[t].y,
+            .width = tileClips[t].width,
+            .height = tileClips[t].height};
     }
 
 }
