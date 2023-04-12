@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#include "engine/audio.hpp"
 #include "engine/game.hpp"
 #include "engine/input.hpp"
 #include "engine/screen.hpp"

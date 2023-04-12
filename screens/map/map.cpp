@@ -4,8 +4,7 @@ namespace muyuy::map
 {
     Map::Map(std::string n, std::unordered_map<std::string, Tileset *> *tilesets) : _name(n), _tilesets(tilesets)
     {
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
+        sol::state &lua = script::scriptManager->getGlobalState();
 
         lua.script_file(n);
 

@@ -18,14 +18,13 @@ namespace muyuy::game
         screen::screenManager->pop(false, false);
         video::videoManager->clearScreenTextures();
         loadEntities("characters");
-        screen::screenManager->push(new map::MapScreen("data/worlds/earth/home.lua"), false, true);
+        screen::screenManager->push(new map::MapScreen("data/worlds/earth/home.lua", "data/plot/episode1/home1.lua"), false, true);
         return _game_script.run("NewGame");
     }
 
     void GameEngine::loadEntities(std::string type)
     {
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
+        sol::state &lua = script::scriptManager->getGlobalState();
 
         lua.script_file("data/entities/" + type + ".lua");
 
@@ -50,27 +49,37 @@ namespace muyuy::game
 
                 if (component_key.as<std::string>() == "character")
                     _registry.emplace<ecs::components::Character>(_global_entities.at(entity_key.as<std::string>()), component_value.get<std::string>("name"));
-                if (component_key.as<std::string>() == "move")
-                    _registry.emplace<ecs::components::Move>(_global_entities.at(entity_key.as<std::string>()), component_value.get<int>("velocity"));
+                if (component_key.as<std::string>() == "sprite")
+                    _registry.emplace<ecs::components::Sprite>(_global_entities.at(entity_key.as<std::string>()),
+                                                               component_value.get<uint16_t>("width"),
+                                                               component_value.get<uint16_t>("height"),
+                                                               component_value.get<uint16_t>("rows"),
+                                                               component_value.get<uint16_t>("cols"),
+                                                               video::videoManager->createImage(component_value.get<std::string>("image_filename").c_str()));
+                if (component_key.as<std::string>() == "movement")
+                    _registry.emplace<ecs::components::Movement>(_global_entities.at(entity_key.as<std::string>()));
                 if (component_key.as<std::string>() == "position")
                     _registry.emplace<ecs::components::Position>(_global_entities.at(entity_key.as<std::string>()));
-                if (component_key.as<std::string>() == "state")
-                    _registry.emplace<ecs::components::State>(_global_entities.at(entity_key.as<std::string>()));
+                if (component_key.as<std::string>() == "rotation")
+                    _registry.emplace<ecs::components::Rotation>(_global_entities.at(entity_key.as<std::string>()));
 
-                for (const auto &properties : component_value)
+                if (component_key.as<std::string>() == "animation")
                 {
-                    sol::object property_key = properties.first;
-
-                    if (property_key.as<std::string>() == "animations")
+                    std::unordered_map<std::string, std::vector<std::pair<uint16_t, uint16_t>>> state_map;
+                    for (const auto &properties : component_value)
                     {
+                        sol::object property_key = properties.first;
                         sol::table property_value = properties.second.as<sol::table>();
-                        for (const auto &animations : property_value)
+                        std::vector<std::pair<uint16_t, uint16_t>> frames;
+
+                        for (const auto &frame : property_value)
                         {
-                            sol::object animation_key = animations.first;
-                            sol::object animation_value = animations.second;
-                            video::videoManager->addAnimation(entity_key.as<std::string>() + "_" + animation_key.as<std::string>(), animation_value.as<std::string>());
+                            sol::table frame_value = frame.second.as<sol::table>();
+                            frames.push_back(std::make_pair(frame_value.get<uint16_t>("id"), frame_value.get<uint16_t>("duration")));
                         }
+                        state_map.insert(std::make_pair(property_key.as<std::string>(), frames));
                     }
+                    _registry.emplace<ecs::components::Animation>(_global_entities.at(entity_key.as<std::string>()), state_map);
                 }
             }
         }

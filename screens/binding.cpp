@@ -23,6 +23,7 @@ namespace muyuy::binding
 
         sol::table map_module = lua["map"].get_or_create<sol::table>();
         map_module.new_usertype<map::MapScreen>("MapScreen", sol::constructors<>(),
+                                                "createObject", &map::MapScreen::createObject,
                                                 sol::base_classes, sol::bases<screen::GameScreen>());
     }
 }

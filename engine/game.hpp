@@ -6,10 +6,12 @@
 #include "engine/video/video.hpp"
 #include "screens/map/map_screen.hpp"
 
+#include "components/animation.hpp"
 #include "components/character.hpp"
-#include "components/move.hpp"
+#include "components/movement.hpp"
 #include "components/position.hpp"
-#include "components/state.hpp"
+#include "components/rotation.hpp"
+#include "components/sprite.hpp"
 
 #include <entt/entity/registry.hpp>
 #include <unordered_map>
