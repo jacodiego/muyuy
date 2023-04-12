@@ -4,13 +4,14 @@ namespace muyuy::map
 {
     MapScreen *MapScreen::_current_instance = nullptr;
 
-    MapScreen::MapScreen(std::string map_filename) : GameScreen(screen::ScreenType::Map), _map(nullptr),
-                                                     _camera(Rect{0, 0, 800, 600})
+    MapScreen::MapScreen(const std::string &map_filename, const std::string &script_filename) : GameScreen(screen::ScreenType::Map), _map(nullptr),
+                                                                                                _camera(Rect{0, 0, 800, 600}), _script_filename(script_filename)
     {
         _current_instance = this;
 
-        loadTilesets();
+        _loadTilesets();
         _map = new Map(map_filename, &_tilesets);
+        _load();
         getScriptSupervisor().initialize(this);
     }
 
@@ -23,21 +24,62 @@ namespace muyuy::map
     void MapScreen::update()
     {
         GameScreen::update();
-        ecs::systems::Input::move(game::gameManager->getRegistry());
-        ecs::systems::Movement::character(game::gameManager->getRegistry(), _camera);
+        ecs::systems::Controller::move(game::gameManager->getRegistry());
+        ecs::systems::Animator::walkers(game::gameManager->getRegistry());
+        ecs::systems::Animator::objects(_map_registry);
+        ecs::systems::Movement::character(game::gameManager->getRegistry(), _camera, _map->getSize().width, _map->getSize().height);
     }
 
     void MapScreen::draw()
     {
         getScriptSupervisor().draw();
         _map->draw(_camera);
-        ecs::systems::Drawer::walkers(game::gameManager->getRegistry(), 0, _camera);
+        ecs::systems::Renderer::walkers(game::gameManager->getRegistry(), _camera);
+        ecs::systems::Renderer::objects(_map_registry, _camera);
     }
 
-    void MapScreen::loadTilesets()
+    void MapScreen::createObject(sol::table obj, int x, int y)
     {
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
+        auto object = _map_registry.create();
+        for (const auto &o : obj)
+        {
+            if (o.first.as<std::string>() == "sprite")
+                _map_registry.emplace<ecs::components::Sprite>(object,
+                                                               o.second.as<sol::table>().get<uint16_t>("width"),
+                                                               o.second.as<sol::table>().get<uint16_t>("height"),
+                                                               o.second.as<sol::table>().get<uint16_t>("rows"),
+                                                               o.second.as<sol::table>().get<uint16_t>("cols"),
+                                                               video::videoManager->createImage(o.second.as<sol::table>().get<std::string>("image_filename").c_str()));
+            if (o.first.as<std::string>() == "position")
+                _map_registry.emplace<ecs::components::Position>(object, x, y);
+
+            if (o.first.as<std::string>() == "animation")
+            {
+                std::unordered_map<std::string, std::vector<std::pair<uint16_t, uint16_t>>> state_map;
+                std::vector<std::pair<uint16_t, uint16_t>> frames;
+                for (const auto &frame : o.second.as<sol::table>())
+                {
+                    sol::table frame_value = frame.second.as<sol::table>();
+                    frames.push_back(std::make_pair(frame_value.get<uint16_t>("id"), frame_value.get<uint16_t>("duration")));
+                }
+                state_map.insert(std::make_pair("animation", frames));
+                _map_registry.emplace<ecs::components::Animation>(object, state_map);
+            }
+        }
+    }
+
+    void MapScreen::_load()
+    {
+        sol::state &lua = script::scriptManager->getGlobalState();
+        lua.require_file("objects", "data/entities/objects.lua");
+        lua.script_file(_script_filename);
+        sol::function fx = lua["load"];
+        fx(this);
+    }
+
+    void MapScreen::_loadTilesets()
+    {
+        sol::state &lua = script::scriptManager->getGlobalState();
 
         lua.script_file("data/tilesets/tilesets.lua");
 

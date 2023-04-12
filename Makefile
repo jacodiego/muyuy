@@ -1,6 +1,7 @@
 #OBJS specifies which files to compile as part of the project
 
-OBJS = $(wildcard main.cpp engine/*.cpp  engine/*/*.cpp engine/*/*.c gui/*.cpp screens/*.cpp screens/*/*.cpp systems/*.cpp utils/*.cpp)
+# OBJS = $(wildcard main.cpp common/*.cpp engine/*.cpp  engine/*/*.cpp gui/*.cpp screens/*.cpp screens/*/*.cpp systems/*.cpp utils/*.cpp)
+OBJS = $(wildcard main.cpp engine/*.cpp  engine/*/*.cpp gui/*.cpp screens/*.cpp screens/*/*.cpp systems/*.cpp utils/*.cpp)
 
 #CC specifies which compiler we're using
 CC = g++
@@ -10,7 +11,7 @@ CC = g++
 COMPILER_FLAGS = -g -w -std=c++20
 
 #LINKER_FLAGS specifies the libraries we're linking against
-LINKER_FLAGS = -lSDL2 -lvulkan -llua -lfreetype
+LINKER_FLAGS = -lSDL2 -lvulkan -llua -lfreetype -lopenal -lalure
 
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = Muyuy

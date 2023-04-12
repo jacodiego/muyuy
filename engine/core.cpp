@@ -4,6 +4,7 @@ namespace muyuy
 {
 
     using namespace boot;
+    using namespace audio;
     using namespace game;
     using namespace input;
     using namespace screen;
@@ -29,28 +30,13 @@ namespace muyuy
 
         bool isRunning = true;
 
-        const uint32_t UPDATES_PER_SECOND = 60;
+        const uint32_t UPDATES_PER_SECOND = 120;
         const uint32_t SKIP_RENDER_TICKS = 1000 / UPDATES_PER_SECOND;
         uint32_t render_tick = SDL_GetTicks();
         uint32_t next_render_tick = 0;
 
         while (systemManager->isRunning())
         {
-            // SDL_PollEvent(&event);
-
-            // switch (event.type)
-            // {
-            // case SDL_QUIT:
-            //     isRunning = false;
-            //     break;
-            // case SDL_WINDOWEVENT:
-            //     if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
-            //         videoManager->resize(event.window.data1, event.window.data2);
-            //     break;
-            // default:
-            //     break;
-            // }
-
             render_tick = SDL_GetTicks();
 
             if (render_tick < next_render_tick)
@@ -84,6 +70,12 @@ namespace muyuy
         screenManager = ScreenEngine::singletonCreate();
         inputManager = InputEngine::singletonCreate();
         gameManager = GameEngine::singletonCreate();
+        audioManager = AudioEngine::singletonCreate();
+
+        if (!audioManager->singletonInitialize())
+        {
+            throw std::runtime_error("ERROR: unable to initialize AudioEngine");
+        }
 
         if (!scriptManager->singletonInitialize())
         {

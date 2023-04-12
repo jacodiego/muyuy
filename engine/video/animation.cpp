@@ -5,8 +5,7 @@ namespace muyuy::video
 
     Animation::Animation(const std::string &script_file)
     {
-        sol::state lua;
-        lua.open_libraries(sol::lib::base);
+        sol::state &lua = script::scriptManager->getGlobalState();
 
         lua.script_file(script_file);
 

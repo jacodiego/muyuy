@@ -8,9 +8,10 @@
 #include "engine/video/video.hpp"
 #include "engine/video/color.hpp"
 
-#include "systems/input.hpp"
+#include "systems/animator.hpp"
+#include "systems/controller.hpp"
 #include "systems/movement.hpp"
-#include "systems/drawer.hpp"
+#include "systems/renderer.hpp"
 
 #include "map.hpp"
 
@@ -29,7 +30,7 @@ namespace muyuy::map
     class MapScreen : public screen::GameScreen
     {
     public:
-        MapScreen(std::string);
+        MapScreen(const std::string &, const std::string &);
         ~MapScreen();
         static MapScreen *currentInstance()
         {
@@ -38,9 +39,11 @@ namespace muyuy::map
         void reset();
         void update();
         void draw();
+        void createObject(sol::table, int, int);
 
     private:
-        void loadTilesets();
+        void _load();
+        void _loadTilesets();
 
     private:
         static MapScreen *_current_instance;
@@ -48,5 +51,8 @@ namespace muyuy::map
         std::unordered_map<std::string, Tileset *> _tilesets;
         Rect _camera;
         MapState _map_state;
+        std::string _script_filename;
+        entt::registry _map_registry;
+        std::vector<entt::entity> _objects;
     };
 };
