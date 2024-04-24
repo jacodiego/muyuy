@@ -8,6 +8,10 @@ namespace muyuy::gui
         video::videoManager->write(_texture, font, label);
     }
 
+    Option::~Option() {
+        // delete _texture;
+    }
+
     void Option::setColor(video::Color color)
     {
         _texture->setColor(color);
@@ -15,7 +19,7 @@ namespace muyuy::gui
 
     int Option::getWidth()
     {
-        _texture->getWidth();
+        return _texture->getWidth();
     }
 
     void Option::draw(int x, int y)

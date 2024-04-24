@@ -3,6 +3,7 @@
 #include "layer.hpp"
 #include "tileset.hpp"
 #include "utils/grid.hpp"
+#include "utils/collition.hpp"
 
 #define TILESETS_COUNT = 2
 

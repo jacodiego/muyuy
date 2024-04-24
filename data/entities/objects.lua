@@ -1,6 +1,7 @@
 
 objects = {
     campfire = {
+        collisionable = {},
         position = {},
         sprite = {
             image_filename = "data/entities/objects/campfire.png",

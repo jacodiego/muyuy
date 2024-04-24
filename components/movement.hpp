@@ -6,7 +6,11 @@ namespace muyuy::ecs::components
 {
     struct Movement
     {
-        int velocity = 2;
+        int velocity = 1;
         std::string state = "idle";
+        bool northward = false;
+        bool eastward = false;
+        bool southward = false;
+        bool westward = false;
     };
 }

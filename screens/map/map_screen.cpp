@@ -27,7 +27,7 @@ namespace muyuy::map
         ecs::systems::Controller::move(game::gameManager->getRegistry());
         ecs::systems::Animator::walkers(game::gameManager->getRegistry());
         ecs::systems::Animator::objects(_map_registry);
-        ecs::systems::Movement::character(game::gameManager->getRegistry(), _camera, _map->getSize().width, _map->getSize().height);
+        ecs::systems::Movement::character(game::gameManager->getRegistry(), _map_registry, _camera, _map);
     }
 
     void MapScreen::draw()
@@ -52,6 +52,9 @@ namespace muyuy::map
                                                                video::videoManager->createImage(o.second.as<sol::table>().get<std::string>("image_filename").c_str()));
             if (o.first.as<std::string>() == "position")
                 _map_registry.emplace<ecs::components::Position>(object, x, y);
+
+            if (o.first.as<std::string>() == "collisionable")
+                _map_registry.emplace<ecs::components::Collisionable>(object);
 
             if (o.first.as<std::string>() == "animation")
             {

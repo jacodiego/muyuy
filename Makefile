@@ -16,7 +16,7 @@ LINKER_FLAGS = -lSDL2 -lvulkan -llua -lfreetype -lopenal -lalure
 #OBJ_NAME specifies the name of our exectuable
 OBJ_NAME = Muyuy
 
-INC=-I$(HOME)/Proyectos/Muyuy/ -I/usr/include/freetype2
+INC=-I$(HOME)/Proyectos/muyuy/ -I/usr/include/freetype2
 
 #This is the target that compiles our executable
 all : $(OBJS)

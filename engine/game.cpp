@@ -62,6 +62,8 @@ namespace muyuy::game
                     _registry.emplace<ecs::components::Position>(_global_entities.at(entity_key.as<std::string>()));
                 if (component_key.as<std::string>() == "rotation")
                     _registry.emplace<ecs::components::Rotation>(_global_entities.at(entity_key.as<std::string>()));
+                if (component_key.as<std::string>() == "collisionable")
+                    _registry.emplace<ecs::components::Collisionable>(_global_entities.at(entity_key.as<std::string>()));
 
                 if (component_key.as<std::string>() == "animation")
                 {

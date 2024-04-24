@@ -6,7 +6,9 @@ characters = {
         },
         movement = {},
         position = {},
-        rotation = {},
+        rotation = {
+            direction = 'south'
+        },
         sprite = {
             image_filename = "data/entities/sprites/kumelen.png",
             width = 24,

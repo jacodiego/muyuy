@@ -24,6 +24,7 @@ function load(m)
     Map = m;
     
     createObject(Map, "campfire", 30, 30);
+    createObject(Map, "campfire", 30, 150);
     
     -- Effects = Map:GetEffectSupervisor();
     -- EventManager = Map:GetEventSupervisor();
@@ -31,7 +32,7 @@ function load(m)
 
     -- Map:SetMinimapImage("data/story/ep1/layna_forest/minimaps/layna_forest_cave1_1_minimap.png");
 
-    -- _CreateCharacters();
+    _CreateCharacters();
     -- _CreateObjects();
     -- _CreateEnemies();
 
@@ -68,7 +69,7 @@ end
 -- Character creation
 function _CreateCharacters()
     -- Default hero and position
-    hero = CreateSprite(Map, "Bronann", 116, 92, vt_map.MapMode.GROUND_OBJECT);
+    --[[ hero = CreateSprite(Map, "Bronann", 116, 92, vt_map.MapMode.GROUND_OBJECT);
     hero:SetDirection(vt_map.MapMode.NORTH);
     hero:SetMovementSpeed(vt_map.MapMode.NORMAL_SPEED);
 
@@ -82,7 +83,7 @@ function _CreateCharacters()
     elseif (GlobalManager:GetMapData():GetPreviousLocation() == "from_layna_cave_1_2") then
         hero:SetDirection(vt_map.MapMode.WEST);
         hero:SetPosition(125.0, 9.0);
-    end
+    end ]]
 
     -- Create characters for dialogues
     -- bronann = CreateSprite(Map, "Bronann", 0, 0, vt_map.MapMode.GROUND_OBJECT);

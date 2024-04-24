@@ -10,30 +10,28 @@ namespace muyuy::ecs::systems
         {
             auto &rotation = view.get<components::Rotation>(e);
             auto &movement = view.get<components::Movement>(e);
-            rotation.northward = input::inputManager->upState();
-            rotation.eastward = input::inputManager->rightState();
-            rotation.southward = input::inputManager->downState();
-            rotation.westward = input::inputManager->leftState();
-            movement.state = rotation.northward || rotation.eastward || rotation.southward || rotation.westward ? "walking" : "idle";
-            if (input::inputManager->upPress())
+            movement.northward = input::inputManager->upState();
+            movement.eastward = input::inputManager->rightState();
+            movement.southward = input::inputManager->downState();
+            movement.westward = input::inputManager->leftState();
+            movement.state = movement.northward || movement.eastward || movement.southward || movement.westward ? 
+                (input::inputManager->confirmState() ? "running" : "walking") : "idle";
+            
+            if (movement.northward && !movement.eastward && !movement.southward && !movement.westward)
             {
-                rotation.last_direction = "north";
+                rotation.direction = "north";
+            } 
+            else if (movement.southward && !movement.eastward && !movement.northward && !movement.westward)
+            {
+                rotation.direction = "south";
+            } 
+            else if (movement.eastward && !movement.northward && !movement.southward && !movement.westward)
+            {
+                rotation.direction = "east";
             }
-            if (input::inputManager->rightPress())
+            else if (movement.westward && !movement.eastward && !movement.southward && !movement.northward)
             {
-                rotation.last_direction = "east";
-            }
-            if (input::inputManager->downPress())
-            {
-                rotation.last_direction = "south";
-            }
-            if (input::inputManager->leftPress())
-            {
-                rotation.last_direction = "west";
-            }
-            if (input::inputManager->confirmState() && movement.state == "walking")
-            {
-                movement.state = "running";
+                rotation.direction = "west";
             }
         }
     }

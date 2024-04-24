@@ -9,6 +9,7 @@ namespace muyuy::gui
     {
     public:
         Option(std::string &, video::FontTypes);
+        ~Option();
         void setColor(video::Color);
         int getWidth();
         void draw(int, int);

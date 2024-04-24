@@ -83,11 +83,11 @@ namespace muyuy::map
         {
             for (Rect collider : layer->getColliders())
             {
-                // if (Util::checkCollision(player, collider))
-                // {
-                //     coll = true;
-                //     break;
-                // }
+                if (utils::checkCollision(player, collider))
+                {
+                   coll = true;
+                   break;
+                }
             }
         }
         return coll;
