@@ -19,9 +19,9 @@ namespace muyuy::binding
     {
         sol::state &lua = scriptManager->getGlobalState();
 
-        // sol::table game_module = lua["game"].get_or_create<sol::table>();
-        // game_module.new_usertype<GameEngine>("GameEngine",
-        //                                      "addGlobalEntity", &GameEngine::addGlobalEntity);
+        sol::table game_module = lua["game"].get_or_create<sol::table>();
+        game_module.new_usertype<GameEngine>("GameEngine",
+                                             "setEntities", &GameEngine::setEntities);
 
         sol::table screen_module = lua["screen"].get_or_create<sol::table>();
         screen_module.new_usertype<GameScreen>("GameScreen",

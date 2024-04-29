@@ -18,6 +18,7 @@ namespace muyuy::input
         SDL_Keycode down;
         SDL_Keycode left;
         SDL_Keycode right;
+        SDL_Keycode run;
         SDL_Keycode confirm;
         SDL_Keycode cancel;
         SDL_Keycode menu;
@@ -67,6 +68,10 @@ namespace muyuy::input
         {
             return _confirm_press;
         }
+        bool runPress() const
+        {
+            return _run_press;
+        }
 
         void setUpKey(const SDL_Keycode &key)
         {
@@ -86,6 +91,11 @@ namespace muyuy::input
         void setRightKey(const SDL_Keycode &key)
         {
             _setNewKey(_key.right, key);
+        }
+
+        void setRunKey(const SDL_Keycode &key)
+        {
+            _setNewKey(_key.run, key);
         }
 
         void setConfirmKey(const SDL_Keycode &key)
@@ -138,6 +148,11 @@ namespace muyuy::input
             return _confirm_state;
         }
 
+        bool runState() const
+        {
+            return _run_state;
+        }
+
         bool cancelState() const
         {
             return _cancel_state;
@@ -162,6 +177,7 @@ namespace muyuy::input
         bool _down_state;
         bool _left_state;
         bool _right_state;
+        bool _run_state;
         bool _confirm_state;
         bool _cancel_state;
         bool _menu_state;
@@ -169,6 +185,7 @@ namespace muyuy::input
         bool _down_press;
         bool _left_press;
         bool _right_press;
+        bool _run_press;
         bool _confirm_press;
         bool _cancel_press;
         bool _menu_press;
@@ -180,6 +197,7 @@ namespace muyuy::input
         bool _down_release;
         bool _left_release;
         bool _right_release;
+        bool _run_release;
         bool _confirm_release;
         bool _cancel_release;
         bool _menu_release;

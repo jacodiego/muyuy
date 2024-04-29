@@ -140,6 +140,7 @@ namespace muyuy
         key_code = settings.readInt("right");
         inputManager->setRightKey(static_cast<SDL_Keycode>(key_code));
 
+        inputManager->setRunKey(static_cast<SDL_Keycode>(settings.readInt("run")));
         inputManager->setConfirmKey(static_cast<SDL_Keycode>(settings.readInt("confirm")));
         inputManager->setCancelKey(static_cast<SDL_Keycode>(settings.readInt("cancel")));
         inputManager->setMenuKey(static_cast<SDL_Keycode>(settings.readInt("menu")));

@@ -22,18 +22,25 @@ local sayen = nil
 -- the main map loading code
 function load(m)
     Map = m;
-    
-    createObject(Map, "campfire", 30, 30);
-    createObject(Map, "campfire", 30, 150);
-    
     -- Effects = Map:GetEffectSupervisor();
     -- EventManager = Map:GetEventSupervisor();
     -- Map:SetUnlimitedStamina(false);
 
     -- Map:SetMinimapImage("data/story/ep1/layna_forest/minimaps/layna_forest_cave1_1_minimap.png");
-
-    _CreateCharacters();
-    -- _CreateObjects();
+    gameManager:setEntities({
+        kumelen = {
+            rotation = {
+                direction = 's'
+            },
+            position = {
+                x = 115,
+                y = 640
+            }
+        }
+    });
+    _CreateObjects();
+    _CreateNonPlayerCharacters();
+    
     -- _CreateEnemies();
 
     -- -- Set the camera focus on hero
@@ -67,36 +74,30 @@ function update()
 end
 
 -- Character creation
-function _CreateCharacters()
-    -- Default hero and position
-    --[[ hero = CreateSprite(Map, "Bronann", 116, 92, vt_map.MapMode.GROUND_OBJECT);
-    hero:SetDirection(vt_map.MapMode.NORTH);
-    hero:SetMovementSpeed(vt_map.MapMode.NORMAL_SPEED);
-
-    -- Load previous save point data
-    local x_position = GlobalManager:GetMapData():GetSaveLocationX();
-    local y_position = GlobalManager:GetMapData():GetSaveLocationY();
-    if (x_position ~= 0 and y_position ~= 0) then
-        -- Make the character look at us in that case
-        hero:SetDirection(vt_map.MapMode.SOUTH);
-        hero:SetPosition(x_position, y_position);
-    elseif (GlobalManager:GetMapData():GetPreviousLocation() == "from_layna_cave_1_2") then
-        hero:SetDirection(vt_map.MapMode.WEST);
-        hero:SetPosition(125.0, 9.0);
-    end ]]
-
-    -- Create characters for dialogues
-    -- bronann = CreateSprite(Map, "Bronann", 0, 0, vt_map.MapMode.GROUND_OBJECT);
-    -- bronann:SetDirection(vt_map.MapMode.NORTH);
-    -- bronann:SetMovementSpeed(vt_map.MapMode.NORMAL_SPEED);
-    -- bronann:SetCollisionMask(vt_map.MapMode.NO_COLLISION);
-    -- bronann:SetVisible(false);
-
-    -- kalya = CreateSprite(Map, "Kalya", 0, 0, vt_map.MapMode.GROUND_OBJECT);
-    -- kalya:SetDirection(vt_map.MapMode.NORTH);
-    -- kalya:SetMovementSpeed(vt_map.MapMode.NORMAL_SPEED);
-    -- kalya:SetCollisionMask(vt_map.MapMode.NO_COLLISION);
-    -- kalya:SetVisible(false);
+function _CreateNonPlayerCharacters()
+    npcs = {
+        sayen = {
+            npc = {
+                name = "Meulen"
+            },
+            position = {
+                x = 200,
+                y = 700
+            },
+            collisionable = {},
+            rotation = {
+                direction = 'w'
+            },
+            sprite = {
+                image_filename = "data/entities/sprites/sayen.png",
+                width = 24,
+                height = 32,
+                rows = 4,
+                cols = 3
+            }
+        }
+    };
+    Map:loadEntities(npcs);
 end
 
 -- -- Keeps in memory whether objects are being loaded.
@@ -111,6 +112,11 @@ end
 -- local sixth_trigger_rock = nil
 -- local seventh_trigger_rock = nil
 -- local eighth_trigger_rock = nil
+
+function _CreateObjects()
+    createObject(Map, "campfire", 30, 30);
+    createObject(Map, "treasure", 10, 700);
+end
 
 -- function _CreateObjects()
 --     local object = nil

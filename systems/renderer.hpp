@@ -2,7 +2,9 @@
 
 #include "components/animation.hpp"
 #include "components/character.hpp"
+#include "components/npc.hpp"
 #include "components/movement.hpp"
+#include "components/openable.hpp"
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "components/sprite.hpp"
@@ -19,7 +21,9 @@ namespace muyuy::ecs::systems
     {
     public:
         static void walkers(entt::registry &, Rect &);
+        static void npc(entt::registry &, Rect &);
         static void objects(entt::registry &, Rect &);
+        static void openables(entt::registry &, Rect &);
     };
 
 }

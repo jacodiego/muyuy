@@ -6,5 +6,7 @@ namespace muyuy::ecs::components
     struct Character
     {
         std::string name;
+        bool available;
+        bool active;
     };
 }

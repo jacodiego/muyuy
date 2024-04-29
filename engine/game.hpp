@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils/singleton.hpp"
+#include "utils/ecs.hpp"
 #include "engine/screen.hpp"
 #include "engine/script.hpp"
 #include "engine/video/video.hpp"
@@ -15,6 +16,9 @@
 
 #include <entt/entity/registry.hpp>
 #include <unordered_map>
+
+#define SOL_ALL_SAFETIES_ON 1
+#include <sol/sol.hpp>
 
 namespace muyuy::game
 {
@@ -31,6 +35,7 @@ namespace muyuy::game
         bool singletonInitialize() { return true; };
         bool newGame();
         void loadEntities(std::string);
+        void setEntities(sol::table);
         entt::registry &getRegistry() { return _registry; };
 
     private:

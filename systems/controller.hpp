@@ -2,6 +2,7 @@
 
 #include "components/character.hpp"
 #include "components/movement.hpp"
+#include "components/openable.hpp"
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "engine/input.hpp"

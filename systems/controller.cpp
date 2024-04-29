@@ -14,24 +14,23 @@ namespace muyuy::ecs::systems
             movement.eastward = input::inputManager->rightState();
             movement.southward = input::inputManager->downState();
             movement.westward = input::inputManager->leftState();
-            movement.state = movement.northward || movement.eastward || movement.southward || movement.westward ? 
-                (input::inputManager->confirmState() ? "running" : "walking") : "idle";
-            
+            movement.state = movement.northward || movement.eastward || movement.southward || movement.westward ? (input::inputManager->runState() ? "running" : "walking") : "idle";
+
             if (movement.northward && !movement.eastward && !movement.southward && !movement.westward)
             {
-                rotation.direction = "north";
-            } 
+                rotation.direction = 'n';
+            }
             else if (movement.southward && !movement.eastward && !movement.northward && !movement.westward)
             {
-                rotation.direction = "south";
-            } 
+                rotation.direction = 's';
+            }
             else if (movement.eastward && !movement.northward && !movement.southward && !movement.westward)
             {
-                rotation.direction = "east";
+                rotation.direction = 'e';
             }
             else if (movement.westward && !movement.eastward && !movement.southward && !movement.northward)
             {
-                rotation.direction = "west";
+                rotation.direction = 'w';
             }
         }
     }

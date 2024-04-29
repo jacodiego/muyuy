@@ -40,50 +40,20 @@ namespace muyuy::game
                 std::cerr << "Entity already exist" << std::endl;
                 continue;
             }
-            _global_entities.insert(std::make_pair(entity_key.as<std::string>(), _registry.create()));
+            auto ent = _registry.create();
+            _global_entities.insert(std::make_pair(entity_key.as<std::string>(), ent));
 
-            for (const auto &components : entity_value)
-            {
-                sol::object component_key = components.first;
-                sol::table component_value = components.second.as<sol::table>();
+            utils::updateEntity(&_registry, ent, entity_value);
+        }
+    }
 
-                if (component_key.as<std::string>() == "character")
-                    _registry.emplace<ecs::components::Character>(_global_entities.at(entity_key.as<std::string>()), component_value.get<std::string>("name"));
-                if (component_key.as<std::string>() == "sprite")
-                    _registry.emplace<ecs::components::Sprite>(_global_entities.at(entity_key.as<std::string>()),
-                                                               component_value.get<uint16_t>("width"),
-                                                               component_value.get<uint16_t>("height"),
-                                                               component_value.get<uint16_t>("rows"),
-                                                               component_value.get<uint16_t>("cols"),
-                                                               video::videoManager->createImage(component_value.get<std::string>("image_filename").c_str()));
-                if (component_key.as<std::string>() == "movement")
-                    _registry.emplace<ecs::components::Movement>(_global_entities.at(entity_key.as<std::string>()));
-                if (component_key.as<std::string>() == "position")
-                    _registry.emplace<ecs::components::Position>(_global_entities.at(entity_key.as<std::string>()));
-                if (component_key.as<std::string>() == "rotation")
-                    _registry.emplace<ecs::components::Rotation>(_global_entities.at(entity_key.as<std::string>()));
-                if (component_key.as<std::string>() == "collisionable")
-                    _registry.emplace<ecs::components::Collisionable>(_global_entities.at(entity_key.as<std::string>()));
-
-                if (component_key.as<std::string>() == "animation")
-                {
-                    std::unordered_map<std::string, std::vector<std::pair<uint16_t, uint16_t>>> state_map;
-                    for (const auto &properties : component_value)
-                    {
-                        sol::object property_key = properties.first;
-                        sol::table property_value = properties.second.as<sol::table>();
-                        std::vector<std::pair<uint16_t, uint16_t>> frames;
-
-                        for (const auto &frame : property_value)
-                        {
-                            sol::table frame_value = frame.second.as<sol::table>();
-                            frames.push_back(std::make_pair(frame_value.get<uint16_t>("id"), frame_value.get<uint16_t>("duration")));
-                        }
-                        state_map.insert(std::make_pair(property_key.as<std::string>(), frames));
-                    }
-                    _registry.emplace<ecs::components::Animation>(_global_entities.at(entity_key.as<std::string>()), state_map);
-                }
-            }
+    void GameEngine::setEntities(sol::table entities)
+    {
+        for (const auto &entity : entities)
+        {
+            sol::object entity_key = entity.first;
+            sol::table entity_value = entity.second.as<sol::table>();
+            utils::updateEntity(&_registry, _global_entities.at(entity_key.as<std::string>()), entity_value);
         }
     }
 }

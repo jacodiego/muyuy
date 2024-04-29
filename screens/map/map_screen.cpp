@@ -12,6 +12,7 @@ namespace muyuy::map
         _loadTilesets();
         _map = new Map(map_filename, &_tilesets);
         _load();
+        ecs::systems::Camera::followCharacter(game::gameManager->getRegistry(), _camera, _map);
         getScriptSupervisor().initialize(this);
     }
 
@@ -27,7 +28,9 @@ namespace muyuy::map
         ecs::systems::Controller::move(game::gameManager->getRegistry());
         ecs::systems::Animator::walkers(game::gameManager->getRegistry());
         ecs::systems::Animator::objects(_map_registry);
+        ecs::systems::Interaction::open(game::gameManager->getRegistry(), _map_registry);
         ecs::systems::Movement::character(game::gameManager->getRegistry(), _map_registry, _camera, _map);
+        ecs::systems::Camera::followCharacter(game::gameManager->getRegistry(), _camera, _map);
     }
 
     void MapScreen::draw()
@@ -35,7 +38,9 @@ namespace muyuy::map
         getScriptSupervisor().draw();
         _map->draw(_camera);
         ecs::systems::Renderer::walkers(game::gameManager->getRegistry(), _camera);
+        ecs::systems::Renderer::npc(_map_registry, _camera);
         ecs::systems::Renderer::objects(_map_registry, _camera);
+        ecs::systems::Renderer::openables(_map_registry, _camera);
     }
 
     void MapScreen::createObject(sol::table obj, int x, int y)
@@ -56,6 +61,9 @@ namespace muyuy::map
             if (o.first.as<std::string>() == "collisionable")
                 _map_registry.emplace<ecs::components::Collisionable>(object);
 
+            if (o.first.as<std::string>() == "openable")
+                _map_registry.emplace<ecs::components::Openable>(object);
+
             if (o.first.as<std::string>() == "animation")
             {
                 std::unordered_map<std::string, std::vector<std::pair<uint16_t, uint16_t>>> state_map;
@@ -68,6 +76,15 @@ namespace muyuy::map
                 state_map.insert(std::make_pair("animation", frames));
                 _map_registry.emplace<ecs::components::Animation>(object, state_map);
             }
+        }
+    }
+
+    void MapScreen::loadEntities(sol::table entities)
+    {
+        for (const auto &o : entities)
+        {
+            auto ent = _map_registry.create();
+            utils::updateEntity(&_map_registry, ent, o.second.as<sol::table>());
         }
     }
 

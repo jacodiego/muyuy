@@ -24,6 +24,9 @@ namespace muyuy::input
         _right_state = false;
         _right_press = false;
         _right_release = false;
+        _run_state = false;
+        _run_press = false;
+        _run_release = false;
         _confirm_state = false;
         _confirm_press = false;
         _confirm_release = false;
@@ -62,6 +65,8 @@ namespace muyuy::input
         _left_release = false;
         _right_press = false;
         _right_release = false;
+        _run_press = false;
+        _run_release = false;
         _confirm_press = false;
         _confirm_release = false;
         _cancel_press = false;
@@ -95,11 +100,11 @@ namespace muyuy::input
         }
 
         _registered_key_press = _up_press || _down_press || _left_press || _right_press || _quit_press ||
-                                _confirm_press || _cancel_press || _minimap_press || _menu_press || _pause_press ||
+                                _run_press || _confirm_press || _cancel_press || _minimap_press || _menu_press || _pause_press ||
                                 _help_press;
 
         _registered_key_release = _up_release || _down_release || _left_release || _right_release || _quit_release ||
-                                  _confirm_release || _cancel_release || _minimap_release || _menu_release || _pause_release ||
+                                  _run_release || _confirm_release || _cancel_release || _minimap_release || _menu_release || _pause_release ||
                                   _help_release;
     }
 
@@ -179,6 +184,12 @@ namespace muyuy::input
                 _right_press = true;
                 return;
             }
+            else if (key_event.keysym.sym == _key.run)
+            {
+                _run_state = true;
+                _run_press = true;
+                return;
+            }
             else if (key_event.keysym.sym == _key.confirm || key_event.keysym.sym == SDLK_RETURN || key_event.keysym.sym == SDLK_KP_ENTER)
             {
                 _confirm_state = true;
@@ -246,6 +257,12 @@ namespace muyuy::input
             {
                 _right_state = false;
                 _right_release = true;
+                return;
+            }
+            else if (key_event.keysym.sym == _key.run)
+            {
+                _run_state = false;
+                _run_release = true;
                 return;
             }
             else if (key_event.keysym.sym == _key.confirm || key_event.keysym.sym == SDLK_RETURN || key_event.keysym.sym == SDLK_KP_ENTER)

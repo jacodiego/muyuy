@@ -9,7 +9,9 @@
 #include "engine/video/color.hpp"
 
 #include "systems/animator.hpp"
+#include "systems/camera.hpp"
 #include "systems/controller.hpp"
+#include "systems/interaction.hpp"
 #include "systems/movement.hpp"
 #include "systems/renderer.hpp"
 
@@ -40,6 +42,7 @@ namespace muyuy::map
         void update();
         void draw();
         void createObject(sol::table, int, int);
+        void loadEntities(sol::table);
 
     private:
         void _load();

@@ -17,6 +17,18 @@ objects = {
             [3] = { id = 3, duration = 150 },
             [4] = { id = 4, duration = 150 }
         }
+    },
+    treasure = {
+        collisionable = {},
+        position = {},
+        openable = {},
+        sprite = {
+            image_filename = "data/entities/objects/treasure.png",
+            width = 16,
+            height = 16,
+            rows = 1,
+            cols = 2
+        }
     }
 };
 
