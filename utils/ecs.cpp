@@ -26,6 +26,8 @@ namespace muyuy::utils
                                                                  video::videoManager->createImage(component_value.get<std::string>("image_filename").c_str()));
             if (component_key.as<std::string>() == "movement")
                 reg->emplace_or_replace<ecs::components::Movement>(ent);
+            if (component_key.as<std::string>() == "walker")
+                reg->emplace_or_replace<ecs::components::Walker>(ent);
             if (component_key.as<std::string>() == "position")
                 reg->emplace_or_replace<ecs::components::Position>(ent, component_value.get_or<uint16_t>("x", 0), component_value.get_or<uint16_t>("y", 0));
             if (component_key.as<std::string>() == "rotation")

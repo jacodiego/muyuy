@@ -6,6 +6,7 @@
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "components/sprite.hpp"
+#include "components/walker.hpp"
 #include "engine/video/video.hpp"
 #include "utils/rect.hpp"
 
@@ -18,6 +19,7 @@ namespace muyuy::ecs::systems
     class Animator
     {
     public:
+        static void characters(entt::registry &);
         static void walkers(entt::registry &);
         static void objects(entt::registry &);
     };

@@ -8,6 +8,7 @@
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "components/sprite.hpp"
+#include "components/walker.hpp"
 #include "engine/video/video.hpp"
 #include "utils/rect.hpp"
 
@@ -20,8 +21,8 @@ namespace muyuy::ecs::systems
     class Renderer
     {
     public:
+        static void characters(entt::registry &, Rect &);
         static void walkers(entt::registry &, Rect &);
-        static void npc(entt::registry &, Rect &);
         static void objects(entt::registry &, Rect &);
         static void openables(entt::registry &, Rect &);
     };

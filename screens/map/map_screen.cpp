@@ -26,9 +26,12 @@ namespace muyuy::map
     {
         GameScreen::update();
         ecs::systems::Controller::move(game::gameManager->getRegistry());
-        ecs::systems::Animator::walkers(game::gameManager->getRegistry());
+        ecs::systems::Animator::characters(game::gameManager->getRegistry());
+        ecs::systems::Animator::walkers(_map_registry);
         ecs::systems::Animator::objects(_map_registry);
         ecs::systems::Interaction::open(game::gameManager->getRegistry(), _map_registry);
+        ecs::systems::Intelligence::walkers(_map_registry, _map);
+        ecs::systems::Movement::walkers(_map_registry, _map);
         ecs::systems::Movement::character(game::gameManager->getRegistry(), _map_registry, _camera, _map);
         ecs::systems::Camera::followCharacter(game::gameManager->getRegistry(), _camera, _map);
     }
@@ -37,8 +40,8 @@ namespace muyuy::map
     {
         getScriptSupervisor().draw();
         _map->draw(_camera);
-        ecs::systems::Renderer::walkers(game::gameManager->getRegistry(), _camera);
-        ecs::systems::Renderer::npc(_map_registry, _camera);
+        ecs::systems::Renderer::characters(game::gameManager->getRegistry(), _camera);
+        ecs::systems::Renderer::walkers(_map_registry, _camera);
         ecs::systems::Renderer::objects(_map_registry, _camera);
         ecs::systems::Renderer::openables(_map_registry, _camera);
     }

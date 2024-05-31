@@ -6,6 +6,7 @@
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "components/sprite.hpp"
+#include "components/walker.hpp"
 #include "engine/video/video.hpp"
 #include "screens/map/map.hpp"
 #include "utils/rect.hpp"
@@ -20,6 +21,7 @@ namespace muyuy::ecs::systems
     {
     public:
         static void character(entt::registry &, entt::registry &, Rect &, map::Map *);
+        static void walkers(entt::registry &, map::Map *);
     };
 
 }

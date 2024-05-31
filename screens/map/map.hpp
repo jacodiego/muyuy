@@ -23,7 +23,7 @@ namespace muyuy::map
         bool getCollidersGrid(GridLocation) const;
 
         Size getGridSize() const;
-        // GridLocation getGridPosition(Coordinate) const;
+        GridLocation getGridPosition(uint16_t, uint16_t) const;
         SquareGrid getGrid() const;
 
     private:

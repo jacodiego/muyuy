@@ -38,6 +38,12 @@ namespace muyuy::map
 
             _layers.push_back(new Layer(map, _map_tilesets, Coordinate{m["tile_cols"], m["tile_rows"]}));
         }
+
+        _grid = SquareGrid(m["tile_cols"].get<int>(), m["tile_rows"].get<int>());
+        for (int i = 0; i < m["tile_cols"].get<int>(); i++)
+            for (int j = 0; j < m["tile_rows"].get<int>(); j++)
+                if (getCollidersGrid(GridLocation{i, j}))
+                    _grid.addWall(GridLocation{i, j});
     }
 
     Map::~Map()
@@ -85,8 +91,8 @@ namespace muyuy::map
             {
                 if (utils::checkCollision(player, collider))
                 {
-                   coll = true;
-                   break;
+                    coll = true;
+                    break;
                 }
             }
         }
@@ -99,7 +105,8 @@ namespace muyuy::map
 
         for (auto layer : _layers)
         {
-            if (layer->getTile(location.x + (location.y) * _map_size.width)->getCollitionBox() != NULL)
+            auto tile = layer->getTile(location.x + (location.y) * _map_size.width);
+            if (tile != NULL && tile->getCollitionBox() != NULL)
             {
                 coll = true;
                 break;
@@ -113,10 +120,10 @@ namespace muyuy::map
         return _map_size;
     }
 
-    // GridLocation Map::getGridPosition(Coordinate c) const
-    // {
-    //     return GridLocation(c.x / tileSize.width, c.y / tileSize.height);
-    // }
+    GridLocation Map::getGridPosition(uint16_t x, uint16_t y) const
+    {
+        return GridLocation(x / _tile_size.width, y / _tile_size.height);
+    }
 
     SquareGrid Map::getGrid() const
     {

@@ -69,4 +69,64 @@ namespace muyuy::ecs::systems
         }
     }
 
+    void Movement::walkers(entt::registry &reg, map::Map *map)
+    {
+        const auto view = reg.view<components::Position, components::Movement, components::Walker, components::Sprite>();
+        const auto collisionables = reg.view<components::Collisionable, components::Sprite, components::Position>();
+
+        for (const entt::entity walker : view)
+        {
+            // auto isCharacter = reg.try_get<components::Character>(walker);
+            /* if ((isCharacter != NULL && !isCharacter->dialoguing) || isCharacter == NULL)
+            {
+                int velX = 0;
+                int velY = 0;
+                if (view.get<Movable>(walker).movingUp)
+                    velY = -1;
+                if (view.get<Movable>(walker).movingDown)
+                    velY = 1;
+                if (view.get<Movable>(walker).movingLeft)
+                    velX = -1;
+                if (view.get<Movable>(walker).movingRight)
+                    velX = 1;
+
+                view.get<Position>(walker).c.y += velY;
+                view.get<Position>(walker).c.x += velX;
+            } */
+
+            int velX = 0;
+            int velY = 0;
+            if (view.get<components::Movement>(walker).northward)
+                velY = -1;
+            if (view.get<components::Movement>(walker).southward)
+                velY = 1;
+            if (view.get<components::Movement>(walker).westward)
+                velX = -1;
+            if (view.get<components::Movement>(walker).eastward)
+                velX = 1;
+
+            view.get<components::Position>(walker).y += velY;
+            view.get<components::Position>(walker).x += velX;
+            // if (view.get<Position>(character).c.x < 0 ||
+            //     view.get<Position>(character).c.x + view.get<Sprite>(character).spriteSheet->getSize().w > map->getSize().w ||
+            //     map->getColliders(view.get<Position>(character).c))
+            //     view.get<Position>(character).c.x -= velX;
+            // if (view.get<Position>(character).c.y < 0 ||
+            //     view.get<Position>(character).c.y + view.get<Sprite>(character).spriteSheet->getSize().h > map->getSize().h ||
+            //     map->getColliders(view.get<Position>(character).c))
+            //     view.get<Position>(character).c.y -= velY;
+
+            // for (const entt::entity coll : collisionables)
+            // {
+            //     if (Util::checkCollision(SDL_Rect{view.get<Position>(character).c.x, view.get<Position>(character).c.y, view.get<Sprite>(character).spriteSheet->getSize().w, view.get<Sprite>(character).spriteSheet->getSize().h},
+            //                              SDL_Rect{collisionables.get<Position>(coll).c.x, collisionables.get<Position>(coll).c.y, collisionables.get<Sprite>(coll).spriteSheet->getSize().w, collisionables.get<Sprite>(coll).spriteSheet->getSize().h}))
+            //     {
+            //         view.get<Position>(character).c.x -= velX;
+            //         view.get<Position>(character).c.y -= velY;
+            //         break;
+            //     }
+            // }
+        }
+    }
+
 }

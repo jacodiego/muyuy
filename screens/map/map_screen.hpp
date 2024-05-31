@@ -11,6 +11,7 @@
 #include "systems/animator.hpp"
 #include "systems/camera.hpp"
 #include "systems/controller.hpp"
+#include "systems/intelligence.hpp"
 #include "systems/interaction.hpp"
 #include "systems/movement.hpp"
 #include "systems/renderer.hpp"

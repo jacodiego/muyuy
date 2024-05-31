@@ -12,6 +12,7 @@
 #include "components/position.hpp"
 #include "components/rotation.hpp"
 #include "components/sprite.hpp"
+#include "components/walker.hpp"
 
 namespace muyuy::utils
 {

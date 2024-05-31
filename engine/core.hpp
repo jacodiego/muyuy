@@ -19,7 +19,7 @@ namespace muyuy
 
     private:
         SDL_Event event;
-        void initializeEngine();
-        bool loadSettings();
+        static void initializeEngine();
+        static bool loadSettings();
     };
 }
